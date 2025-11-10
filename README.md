@@ -1,4 +1,8 @@
+Perfect 👍 Here’s the **complete edited and polished version** of your `README.md` — ready for your GitHub repository. It includes the Firebase initialization helper (`resources/js/firebase.js`), a clean section layout, and professional formatting for a Laravel + IoT dashboard project.
 
+---
+
+````markdown
 <p align="center">
   <a href="https://laravel.com" target="_blank">
     <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
@@ -14,30 +18,26 @@
 
 ---
 
-# ⚡ MSU-IIT Energy Monitoring System (Laravel + IoT + Firebase)
+# ⚡ MSU-IIT Energy Monitoring System  
+### *(Laravel + IoT + Firebase Integration)*
 
-A Laravel-based **Energy Monitoring Dashboard** designed for **MSU-IIT**, connected to **IoT smart meters** via **Firebase Realtime Database**.
-
-It displays:
-- Real-time power readings  
-- Building-specific status and consumption  
-- Historical and system logs  
-- Interactive map visualization of the MSU-IIT campus  
+A **real-time energy monitoring dashboard** built for **MSU-IIT**, powered by **Laravel**, **IoT smart meters**, and **Firebase Realtime Database**.  
+This system provides **instant visualization**, **building-level monitoring**, and **historical tracking** of campus-wide power consumption.
 
 ---
 
 ## 🧩 Features
 
-- 🔌 Real-time energy data visualization  
-- 🧠 Interactive campus map with building power status  
-- 📊 Dynamic graphs using Chart.js  
-- 🗂️ System and building logs with export options  
-- ☁️ Firebase integration for IoT data streaming  
-- 🧱 Modular Laravel architecture (per-page Blade views)
+- 🔌 **Real-time** energy usage visualization  
+- 🧠 **Interactive campus map** with building statuses  
+- 📊 **Dynamic graphs** powered by Chart.js  
+- 🗂️ **System and building logs** with export options  
+- ☁️ **Firebase IoT integration** for instant data sync  
+- 🧱 **Clean modular Laravel architecture**
 
 ---
 
-## ⚙️ Project Setup
+## ⚙️ Installation Guide
 
 ```bash
 # Clone this repository
@@ -48,7 +48,7 @@ cd energy-monitoring-system
 composer install
 npm install && npm run dev
 
-# Create your .env file
+# Copy .env file
 cp .env.example .env
 
 # Generate app key
@@ -57,7 +57,7 @@ php artisan key:generate
 
 ---
 
-## 🗄️ Database Setup (MySQL + Migrations)
+## 🗄️ Database Setup (MySQL)
 
 ```bash
 php artisan migrate
@@ -75,16 +75,16 @@ Tables created:
 
 ---
 
-## 🔥 IoT Firebase Integration Guide
+## 🔥 Firebase IoT Integration
 
-This system is **IoT-ready** — it connects Laravel with your **Firebase Realtime Database** to stream energy data from IoT devices (e.g., ESP32 or Raspberry Pi).
+This project connects Laravel with your **Firebase Realtime Database** to receive live energy readings from IoT devices (ESP32, Raspberry Pi, etc.).
 
 ### 1️⃣ Firebase Setup
 
 1. Go to [Firebase Console](https://console.firebase.google.com)
-2. Create a **new project** (e.g., `msu-iit-energy`)
-3. Add a **Realtime Database**
-4. Copy your credentials and add them to `.env`:
+2. Create a **project** (e.g., `msu-iit-energy`)
+3. Enable **Realtime Database**
+4. Copy your credentials and paste them into `.env`:
 
 ```env
 FIREBASE_API_KEY=YOUR_API_KEY
@@ -94,9 +94,9 @@ FIREBASE_PROJECT_ID=your-project-id
 
 ---
 
-### 2️⃣ Firebase Rules (Security)
+### 2️⃣ Firebase Rules
 
-Paste the following into your Firebase **Realtime Database → Rules** tab:
+Go to **Realtime Database → Rules** and paste:
 
 ```json
 {
@@ -136,15 +136,15 @@ Paste the following into your Firebase **Realtime Database → Rules** tab:
 }
 ```
 
-🧠 Explanation:
+**Explanation:**
 
-* **IoT devices** authenticate with a Firebase Auth token that includes a `"device": true` claim.
-* **Laravel dashboard** can **read** but not **write** to the DB.
-* Protects your database from unauthorized access.
+* IoT devices (with `"device": true` claim) can write data.
+* Laravel dashboard can read but **not modify** the database.
+* Protects data integrity and device authentication.
 
 ---
 
-### 3️⃣ IoT Device Example (ESP32/Arduino)
+### 3️⃣ Example: IoT Device (ESP32/Arduino)
 
 ```cpp
 #include <Firebase_ESP_Client.h>
@@ -154,44 +154,53 @@ FirebaseAuth auth;
 FirebaseConfig config;
 
 config.api_key = "YOUR_FIREBASE_API_KEY";
-auth.user.email = "iot_coe_meter@msuiit.edu.ph";
-auth.user.password = "iot_secure_pass";
+auth.user.email = "iot_meter@msuiit.edu.ph";
+auth.user.password = "iot_secure_password";
 config.database_url = "https://your-project-id.firebaseio.com/";
 
 Firebase.begin(&config, &auth);
 
-// Example: Sending data to Firebase
+// Example data upload
 Firebase.RTDB.setFloat(&fbdo, "system_summary/totalPower", 1234.56);
 Firebase.RTDB.setFloat(&fbdo, "building_status/COE/power", 456.78);
 ```
 
-✅ Secure device → Firebase write
+✅ IoT → Firebase write
 ✅ Laravel → Firebase read
 
 ---
 
-### 4️⃣ Real-Time Updates (Frontend)
+## 🧠 Firebase Frontend Integration (resources/js/firebase.js)
 
-Add this snippet to any Blade view (e.g., `graphs.blade.php` or `map.blade.php`):
+```js
+// resources/js/firebase.js
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_FIREBASE_API_KEY",
+  databaseURL: import.meta.env.VITE_FIREBASE_DB_URL || "https://your-project-id.firebaseio.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+export function listenTo(path, callback) {
+  onValue(ref(db, path), (snapshot) => {
+    callback(snapshot.val());
+  });
+}
+```
+
+Then in your Blade files:
 
 ```html
+<script type="module" src="{{ asset('js/firebase.js') }}"></script>
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-  import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "YOUR_FIREBASE_API_KEY",
-    databaseURL: "https://your-project-id.firebaseio.com",
-    projectId: "your-project-id"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-
-  // Listen for live COE updates
-  onValue(ref(db, 'graph_data/COE'), (snapshot) => {
-    const data = snapshot.val();
-    console.log("Live COE data:", data);
+  import { listenTo } from "/js/firebase.js";
+  listenTo('graph_data/COE', (data) => {
+    console.log("Live COE Data:", data);
     // Update chart dynamically
   });
 </script>
@@ -199,7 +208,7 @@ Add this snippet to any Blade view (e.g., `graphs.blade.php` or `map.blade.php`)
 
 ---
 
-## 🧱 File Overview
+## 🧱 Project Structure
 
 ```
 energy-monitoring-system/
@@ -210,11 +219,12 @@ energy-monitoring-system/
 ├── resources/views/pages/
 │   ├── home.blade.php          # Dashboard
 │   ├── map.blade.php           # Interactive map
-│   ├── graphs.blade.php        # Chart display
+│   ├── graphs.blade.php        # Graph visualization
 │   ├── tables.blade.php        # Logs & tables
-│   ├── history.blade.php       # System & building data
-│   ├── view.blade.php          # View preferences
+│   ├── history.blade.php       # System & building history
+│   ├── view.blade.php          # UI preferences
 │
+├── resources/js/firebase.js
 ├── public/images/msu-iit-map.jpg
 ├── routes/web.php
 ├── .env
@@ -223,47 +233,43 @@ energy-monitoring-system/
 
 ---
 
-## 🚀 Ready for IoT Data Flow
+## 🚀 IoT Data Flow Summary
 
-**IoT → Firebase → Laravel Dashboard (Real-time)**
+**IoT Device → Firebase → Laravel Dashboard (Real-Time)**
 
-1. Devices push readings to Firebase paths like:
-
-   * `system_summary/`
-   * `building_data/COE/`
-   * `system_logs/`
-2. Laravel frontend listens for updates using `onValue()` and updates charts, map, or tables live.
-3. Future backend versions can sync Firebase → MySQL for historical archiving.
+1. Devices send energy readings to Firebase.
+2. Laravel frontend listens via Firebase SDK (`onValue`).
+3. Dashboard updates charts, tables, and maps instantly.
 
 ---
 
-## 🧠 Laravel Info
+## 🧰 Built With
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
-
-* [Simple, fast routing engine](https://laravel.com/docs/routing).
-* [Powerful dependency injection container](https://laravel.com/docs/container).
-* Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-* Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-* Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-* [Robust background job processing](https://laravel.com/docs/queues).
-* [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
-
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* Laravel 11
+* Tailwind CSS
+* Chart.js
+* Firebase Realtime Database
+* Vite
+* MySQL
 
 ---
 
-## License
+## 🪪 License
 
-The Laravel framework and this project are open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
-
-````
+This project and the Laravel framework are open-sourced under the [MIT License](https://opensource.org/licenses/MIT).
 
 ---
 
-Would you like me to append a **Firebase initialization helper file** (`resources/js/firebase.js`) mentioned in the guide, so you can just import it in every Blade view with a single line like:  
-```html
-<script type="module" src="{{ asset('js/firebase.js') }}"></script>
-````
+## 🧑‍💻 Contributors
 
-This will make your real-time connection modular and cleaner.
+**Developed by:**
+
+> Justine Boncales — MSU-IIT College of Computer Studies
+> For the MSU-IIT IoT Energy Monitoring Initiative ⚡
+
+```
+
+---
+
+Would you like me to also generate the **`DashboardController.php`**, **FirebaseService** (for backend reading), and **Blade structure templates** (`home`, `map`, `graphs`, `tables`) so your GitHub repo is fully functional and demo-ready?
+```
