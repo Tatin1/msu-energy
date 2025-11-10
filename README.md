@@ -1,8 +1,4 @@
-Perfect 👍 Here’s the **complete edited and polished version** of your `README.md` — ready for your GitHub repository. It includes the Firebase initialization helper (`resources/js/firebase.js`), a clean section layout, and professional formatting for a Laravel + IoT dashboard project.
 
----
-
-````markdown
 <p align="center">
   <a href="https://laravel.com" target="_blank">
     <img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo">
