@@ -263,9 +263,4 @@ This project and the Laravel framework are open-sourced under the [MIT License](
 > Justine Boncales — MSU-IIT College of Computer Studies
 > For the MSU-IIT IoT Energy Monitoring Initiative ⚡
 
-```
 
----
-
-Would you like me to also generate the **`DashboardController.php`**, **FirebaseService** (for backend reading), and **Blade structure templates** (`home`, `map`, `graphs`, `tables`) so your GitHub repo is fully functional and demo-ready?
-```
