@@ -14,46 +14,84 @@
 
 ---
 
-# ⚡ MSU-IIT Energy Monitoring System  
-### *(Laravel + IoT + Firebase Integration)*
+# ⚡ MSU-IIT Energy Monitoring System (Laravel + MySQL + Vite)
 
-A **real-time energy monitoring dashboard** built for **MSU-IIT**, powered by **Laravel**, **IoT smart meters**, and **Firebase Realtime Database**.  
-This system provides **instant visualization**, **building-level monitoring**, and **historical tracking** of campus-wide power consumption.
+A **Laravel-based Energy Monitoring Dashboard** designed for **MSU-IIT**, providing real-time visualization of power consumption across campus buildings.  
+Built with **Laravel 11**, **MySQL**, and **Vite + TailwindCSS**, the system helps monitor, record, and analyze energy usage efficiently.
 
 ---
 
 ## 🧩 Features
 
-- 🔌 **Real-time** energy usage visualization  
-- 🧠 **Interactive campus map** with building statuses  
-- 📊 **Dynamic graphs** powered by Chart.js  
-- 🗂️ **System and building logs** with export options  
-- ☁️ **Firebase IoT integration** for instant data sync  
-- 🧱 **Clean modular Laravel architecture**
+- 📊 **Real-time energy dashboard** with building-level metrics  
+- 🗂️ **Logs and reports** for system and building data  
+- 🌍 **Interactive map** of MSU-IIT building locations  
+- 🎨 **Modern frontend** built with Vite and TailwindCSS  
+- 🧱 **Clean MVC structure** for scalable Laravel development  
 
 ---
 
-## ⚙️ Installation Guide
+## ⚙️ Local Development Setup (Laravel Herd)
+
+> 🐑 Using [Laravel Herd](https://herd.laravel.com) for local PHP development is recommended for best performance.
+
+### 1️⃣ Clone the Repository
 
 ```bash
-# Clone this repository
 git clone https://github.com/yourusername/energy-monitoring-system.git
 cd energy-monitoring-system
-
-# Install dependencies
-composer install
-npm install && npm run dev
-
-# Copy .env file
-cp .env.example .env
-
-# Generate app key
-php artisan key:generate
 ````
+
+### 2️⃣ Install Backend Dependencies
+
+```bash
+composer install
+```
+
+### 3️⃣ Install Frontend Dependencies
+
+```bash
+npm install
+npm run dev
+```
+
+### 4️⃣ Environment Setup
+
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+Then open `.env` and configure your database:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=energy_monitoring
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+If you’re using **Herd**, MySQL runs automatically on port `3306`.
 
 ---
 
-## 🗄️ Database Setup (MySQL)
+## 🗄️ Database Setup (Using TablePlus + MySQL)
+
+You can manage and visualize your database easily using [TablePlus](https://tableplus.com).
+
+### 1️⃣ Create a Database
+
+1. Open **TablePlus**
+2. Connect to your **MySQL** server (Herd or manual connection)
+3. Create a new database:
+
+   ```
+   energy_monitoring
+   ```
+
+### 2️⃣ Run Migrations and Seeders
 
 ```bash
 php artisan migrate
@@ -71,196 +109,207 @@ Tables created:
 
 ---
 
-## 🔥 Firebase IoT Integration
+## 💻 Running the Application
 
-This project connects Laravel with your **Firebase Realtime Database** to receive live energy readings from IoT devices (ESP32, Raspberry Pi, etc.).
+### If Using Laravel Herd
 
-### 1️⃣ Firebase Setup
+Once Herd is installed and configured, your app will be accessible at:
 
-1. Go to [Firebase Console](https://console.firebase.google.com)
-2. Create a **project** (e.g., `msu-iit-energy`)
-3. Enable **Realtime Database**
-4. Copy your credentials and paste them into `.env`:
+```
+https://energy-monitoring-system.test
+```
+
+### If Using Artisan
+
+You can also run it manually:
+
+```bash
+php artisan serve
+```
+
+Visit your app at:
+
+```
+http://127.0.0.1:8000
+```
+
+---
+
+## 🎨 Frontend Setup (Vite + TailwindCSS)
+
+This project uses **Vite** for lightning-fast builds and **TailwindCSS** for modern UI design.
+
+### 1️⃣ Development Build (Hot Reload)
+
+```bash
+npm run dev
+```
+
+### 2️⃣ Production Build
+
+```bash
+npm run build
+```
+
+The compiled assets will be stored in:
+
+```
+/public/build/
+```
+
+---
+
+## 🧱 Folder Structure Overview
+
+### 🗂️ Backend (Laravel MVC)
+
+```
+app/
+├── Http/
+│   └── Controllers/
+│       └── DashboardController.php
+├── Models/
+resources/
+├── views/
+│   ├── layouts/
+│   │   └── app.blade.php
+│   └── pages/
+│       ├── home.blade.php          # Dashboard
+│       ├── map.blade.php           # Building map
+│       ├── graphs.blade.php        # Graphs and charts
+│       ├── tables.blade.php        # Logs
+│       ├── history.blade.php       # Historical records
+│       └── view.blade.php          # Preferences view
+routes/
+├── web.php
+```
+
+### 🎨 Frontend (Vite + TailwindCSS)
+
+```
+resources/
+├── css/
+│   └── app.css            # TailwindCSS entry
+├── js/
+│   ├── app.js             # Main JS entry
+│   ├── components/        # Optional custom JS modules
+│   └── charts/            # Chart.js scripts
+vite.config.js             # Vite configuration
+tailwind.config.js         # Tailwind config
+```
+
+### 🗄️ Database Files
+
+```
+database/
+├── migrations/
+├── seeders/
+└── factories/
+```
+
+---
+
+## 🧠 Developer Notes
+
+* **Laravel 11** framework
+* **MySQL** for persistent data storage
+* **Vite + TailwindCSS** for fast and modern frontend
+* **TablePlus** for database management
+* **Blade templates** for server-side rendering
+* **MVC pattern** for maintainability and scalability
+
+---
+
+## 🧰 Recommended Tools
+
+| Purpose               | Tool                                                      |
+| --------------------- | --------------------------------------------------------- |
+| Local PHP Development | [Laravel Herd](https://herd.laravel.com)                  |
+| Database Management   | [TablePlus](https://tableplus.com)                        |
+| Frontend Build Tool   | [Vite](https://vitejs.dev)                                |
+| CSS Framework         | [TailwindCSS](https://tailwindcss.com)                    |
+| Code Editor           | [Visual Studio Code](https://code.visualstudio.com)       |
+| Version Control       | [Git](https://git-scm.com) + [GitHub](https://github.com) |
+
+---
+
+## 🧾 Example `.env` File
+
+Here’s an example configuration for your local setup:
 
 ```env
-FIREBASE_API_KEY=YOUR_API_KEY
-FIREBASE_DB_URL=https://your-project-id.firebaseio.com
-FIREBASE_PROJECT_ID=your-project-id
+APP_NAME="MSU-IIT Energy Monitoring System"
+APP_ENV=local
+APP_KEY=base64:GENERATED_KEY_HERE
+APP_DEBUG=true
+APP_URL=https://energy-monitoring-system.test
+
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=energy_monitoring
+DB_USERNAME=root
+DB_PASSWORD=
+
+VITE_APP_NAME="${APP_NAME}"
 ```
 
 ---
 
-### 2️⃣ Firebase Rules
+## 🚀 Deployment Notes
 
-Go to **Realtime Database → Rules** and paste:
+For production deployment:
 
-```json
-{
-  "rules": {
-    ".read": false,
-    ".write": false,
-
-    "system_summary": {
-      ".read": "auth != null",
-      ".write": "auth != null && auth.token.device === true"
-    },
-    "building_status": {
-      ".read": true,
-      ".write": "auth != null && auth.token.device === true"
-    },
-    "graph_data": {
-      ".read": true,
-      ".write": "auth != null && auth.token.device === true"
-    },
-    "transformer_logs": {
-      ".read": true,
-      ".write": "auth != null && auth.token.device === true"
-    },
-    "system_logs": {
-      ".read": true,
-      ".write": "auth != null && auth.token.device === true"
-    },
-    "building_data": {
-      ".read": true,
-      ".write": "auth != null && auth.token.device === true"
-    },
-    "system_data": {
-      ".read": true,
-      ".write": "auth != null && auth.token.device === true"
-    }
-  }
-}
-```
-
-**Explanation:**
-
-* IoT devices (with `"device": true` claim) can write data.
-* Laravel dashboard can read but **not modify** the database.
-* Protects data integrity and device authentication.
+1. Run `composer install --optimize-autoloader --no-dev`
+2. Run `npm run build`
+3. Set `APP_ENV=production` and `APP_DEBUG=false`
+4. Configure your `.env` for production MySQL credentials
+5. Use a web server like **Nginx** or **Apache** to serve `/public`
 
 ---
 
-### 3️⃣ Example: IoT Device (ESP32/Arduino)
+## 🪄 Quick Start Summary
 
-```cpp
-#include <Firebase_ESP_Client.h>
+```bash
+# 1. Clone project
+git clone https://github.com/yourusername/energy-monitoring-system.git
 
-FirebaseData fbdo;
-FirebaseAuth auth;
-FirebaseConfig config;
+# 2. Install dependencies
+composer install
+npm install
 
-config.api_key = "YOUR_FIREBASE_API_KEY";
-auth.user.email = "iot_meter@msuiit.edu.ph";
-auth.user.password = "iot_secure_password";
-config.database_url = "https://your-project-id.firebaseio.com/";
+# 3. Environment setup
+cp .env.example .env
+php artisan key:generate
 
-Firebase.begin(&config, &auth);
+# 4. Database setup
+php artisan migrate --seed
 
-// Example data upload
-Firebase.RTDB.setFloat(&fbdo, "system_summary/totalPower", 1234.56);
-Firebase.RTDB.setFloat(&fbdo, "building_status/COE/power", 456.78);
+# 5. Run app
+php artisan serve
+npm run dev
 ```
 
-✅ IoT → Firebase write
-✅ Laravel → Firebase read
+Access the system at:
 
----
-
-## 🧠 Firebase Frontend Integration (resources/js/firebase.js)
-
-```js
-// resources/js/firebase.js
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_FIREBASE_API_KEY",
-  databaseURL: import.meta.env.VITE_FIREBASE_DB_URL || "https://your-project-id.firebaseio.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "your-project-id",
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-
-export function listenTo(path, callback) {
-  onValue(ref(db, path), (snapshot) => {
-    callback(snapshot.val());
-  });
-}
 ```
-
-Then in your Blade files:
-
-```html
-<script type="module" src="{{ asset('js/firebase.js') }}"></script>
-<script type="module">
-  import { listenTo } from "/js/firebase.js";
-  listenTo('graph_data/COE', (data) => {
-    console.log("Live COE Data:", data);
-    // Update chart dynamically
-  });
-</script>
+http://127.0.0.1:8000
 ```
 
 ---
 
-## 🧱 Project Structure
+## 🧠 About Laravel
 
-```
-energy-monitoring-system/
-├── app/
-│   ├── Http/Controllers/DashboardController.php
-│   ├── Models/
-│
-├── resources/views/pages/
-│   ├── home.blade.php          # Dashboard
-│   ├── map.blade.php           # Interactive map
-│   ├── graphs.blade.php        # Graph visualization
-│   ├── tables.blade.php        # Logs & tables
-│   ├── history.blade.php       # System & building history
-│   ├── view.blade.php          # UI preferences
-│
-├── resources/js/firebase.js
-├── public/images/msu-iit-map.jpg
-├── routes/web.php
-├── .env
-└── README.md
-```
-
----
-
-## 🚀 IoT Data Flow Summary
-
-**IoT Device → Firebase → Laravel Dashboard (Real-Time)**
-
-1. Devices send energy readings to Firebase.
-2. Laravel frontend listens via Firebase SDK (`onValue`).
-3. Dashboard updates charts, tables, and maps instantly.
-
----
-
-## 🧰 Built With
-
-* Laravel 11
-* Tailwind CSS
-* Chart.js
-* Firebase Realtime Database
-* Vite
-* MySQL
+Laravel is a web application framework with expressive, elegant syntax that simplifies common web development tasks such as routing, caching, sessions, and database management.
+Learn more at [laravel.com](https://laravel.com).
 
 ---
 
 ## 🪪 License
 
-This project and the Laravel framework are open-sourced under the [MIT License](https://opensource.org/licenses/MIT).
-
----
-
-## 🧑‍💻 Contributors
-
-**Developed by:**
-
-> Justine Boncales — MSU-IIT College of Computer Studies
-> For the MSU-IIT IoT Energy Monitoring Initiative ⚡
+This project and the Laravel framework are open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
 
 
