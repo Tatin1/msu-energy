@@ -9,6 +9,7 @@ return new class extends Migration {
     {
         Schema::create('building_logs', function (Blueprint $table) {
             $table->id();
+            $table->string('building'); // Added building column
             $table->date('date');
             $table->time('time')->nullable();
             $table->time('time_ed')->nullable();

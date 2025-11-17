@@ -8,12 +8,12 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
     <div class="card text-center">
       <div class="kpi-label">This Month</div>
-      <div id="thisMonthKwh" class="kpi">1,245 kWh</div>
+      <div id="thisMonthkW" class="kpi">1,245 kW</div>
     </div>
 
     <div class="card text-center">
       <div class="kpi-label">Last Month</div>
-      <div id="lastMonthKwh" class="kpi">1,180 kWh</div>
+      <div id="lastMonthkW" class="kpi">1,180 kW</div>
     </div>
 
     <div class="card text-center">
@@ -62,7 +62,7 @@
   {{-- Charts --}}
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <div class="card">
-      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Energy Consumption (kWh)</h2>
+      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Energy Consumption (kW)</h2>
       <canvas id="billingEnergyChart" height="150"></canvas>
     </div>
 
@@ -81,11 +81,11 @@
       function generateBillingCharts() {
         const buildings = ["COE", "SET", "CSM", "CCS", "PRISM"];
         const energy = buildings.map(() => Math.floor(Math.random() * 2000) + 800);
-        const cost = buildings.map(kwh => (kwh * 7.5).toFixed(2)); // e.g. ₱7.5/kWh
+        const cost = buildings.map(kW => (kW * 7.5).toFixed(2)); // e.g. ₱7.5/kW
 
         // Update KPI cards
-        document.getElementById("thisMonthKwh").textContent = energy[0] + " kWh";
-        document.getElementById("lastMonthKwh").textContent = Math.round(energy[0] * 0.95) + " kWh";
+        document.getElementById("thisMonthkW").textContent = energy[0] + " kW";
+        document.getElementById("lastMonthkW").textContent = Math.round(energy[0] * 0.95) + " kW";
         document.getElementById("totalCost").textContent = "₱" + cost.reduce((a, b) => parseFloat(a) + parseFloat(b), 0).toFixed(2);
         document.getElementById("avgPF").textContent = (0.9 + Math.random() * 0.1).toFixed(2);
 
@@ -99,7 +99,7 @@
           data: {
             labels: buildings,
             datasets: [{
-              label: "Energy (kWh)",
+              label: "Energy (kW)",
               data: energy,
               backgroundColor: "#a11d1d99",
               borderColor: "#a11d1d",

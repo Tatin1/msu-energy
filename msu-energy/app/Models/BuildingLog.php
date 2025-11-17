@@ -12,6 +12,7 @@ class BuildingLog extends Model
     protected $table = 'building_logs';
 
     protected $fillable = [
+        'building', // added building
         'date', 'time', 'time_ed', 'f',
         'v1', 'v2', 'v3',
         'a1', 'a2', 'a3',

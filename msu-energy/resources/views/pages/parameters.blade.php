@@ -6,24 +6,36 @@
 
   {{-- Controls --}}
   <div class="bg-panel p-4 rounded-2xl shadow mb-6">
-    <div class="flex flex-wrap gap-4">
+    <div class="flex flex-wrap gap-4 items-end">
       <div>
         <label class="block text-sm font-bold mb-1 text-gray-800">Building</label>
         <select id="paramBuilding" class="input border-gray-400 rounded-lg px-3 py-2">
-          <option value="COE">COE</option>
-          <option value="SET">SET</option>
-          <option value="CSM">CSM</option>
           <option value="CCS">CCS</option>
+          <option value="CPI">CPI</option>
+          <option value="OMDH">OMDH</option>
+          <option value="OBA">OBA</option>
+          <option value="GYMNASIUM">Gymnasium</option>
+          <option value="CSM">CSM</option>
+          <option value="KTTO">KTTO</option>
+          <option value="ADMINISTRATIVE">Administrative</option>
+          <option value="REGISTRAR">Registrar</option>
+          <option value="IDS">IDS</option>
+          <option value="MAIN LIBRARY">Main Library</option>
+          <option value="SID">SID</option>
+          <option value="COE OLD BUILDING COMPLEX">COE Old Building Complex</option>
+          <option value="KASAMA">KASAMA</option>
+          <option value="CASS">CASS</option>
+          <option value="CEBA">CEBA</option>
+          <option value="SET">SET</option>
+          <option value="COE">COE</option>
+          <option value="CED">CED</option>
+          <option value="GRADUATE DORM">Graduate Dorm</option>
           <option value="PRISM">PRISM</option>
+          <option value="IPDM">IPDM</option>
+          <option value="BAHAY ALUMNI">Bahay Alumni</option>
         </select>
       </div>
-      <div>
-        <label class="block text-sm font-bold mb-1 text-gray-800">Meter #</label>
-        <select id="paramMeter" class="input border-gray-400 rounded-lg px-3 py-2">
-          <option value="1">Meter 1</option>
-          <option value="2">Meter 2</option>
-        </select>
-      </div>
+
       <button id="btnGetData"
         class="btn bg-maroon text-white font-bold px-5 py-2 rounded-xl hover:bg-maroon-700">
         Get Data
@@ -50,13 +62,20 @@
 
     {{-- Energy Consumption Chart --}}
     <div class="card bg-panel p-5 rounded-2xl shadow">
-      <h2 class="text-xl font-semibold mb-4">Energy Consumption (kWh)</h2>
+      <h2 class="text-xl font-semibold mb-4">Energy Consumption (kW)</h2>
       <canvas id="paramEnergyChart" height="180"></canvas>
 
       <div class="grid grid-cols-2 gap-4 mt-6">
-        <x-kpi title="Last Month (kWh)" value="0" id="paramLastMonth" />
-        <x-kpi title="This Month (kWh)" value="0" id="paramThisMonth" />
-      </div>
+  <div>
+    <span class="text-sm">Last Month (kW)</span>
+    <div id="paramLastMonth" class="font-bold text-lg">0</div>
+  </div>
+  <div>
+    <span class="text-sm">This Month (kW)</span>
+    <div id="paramThisMonth" class="font-bold text-lg">0</div>
+  </div>
+</div>
+
     </div>
   </div>
 
@@ -68,7 +87,7 @@
       let chart;
 
       function renderParameters() {
-        // Simulated demo values (replace with real data if available)
+        // Simulated transformer readings
         const volts = [230 + Math.random() * 5, 231 + Math.random() * 5, 229 + Math.random() * 5];
         const amps = [30 + Math.random() * 5, 28 + Math.random() * 5, 29 + Math.random() * 5];
         const pfL = [0.95 + Math.random() * 0.03, 0.93 + Math.random() * 0.04, 0.94 + Math.random() * 0.03];
@@ -93,31 +112,64 @@
           ["THD (Voltage)", THDv, "%"],
           ["THD (Current)", THDi, "%"]
         ];
+
         paramTableBody.innerHTML = rows.map(r =>
           `<tr><td>${r[0]}</td><td class='font-bold'>${r[1]}</td><td>${r[2]}</td></tr>`
         ).join('');
 
-        // Simulate Energy Chart
-        const data = Array.from({ length: 12 }, () => Math.round(100 + Math.random() * 30));
+        // Dummy energy consumption data
+        const hours = Array.from({ length: 24 }, (_, i) => i + 1 + " hr");
+        const lastMonthData = Array.from({ length: 24 }, () => Math.floor(50 + Math.random() * 20));
+        const thisMonthData = Array.from({ length: 24 }, () => Math.floor(40 + Math.random() * 25));
+
+        // Update KPI values
+        document.getElementById("paramLastMonth").textContent = lastMonthData.reduce((a,b)=>a+b,0);
+        document.getElementById("paramThisMonth").textContent = thisMonthData.reduce((a,b)=>a+b,0);
+
+        // Destroy previous chart if exists
         if (chart) chart.destroy();
+
         chart = new Chart(ctx, {
           type: 'line',
           data: {
-            labels: Array.from({ length: data.length }, (_, i) => i + 1),
-            datasets: [{
-              label: "kWh",
-              data,
-              fill: true,
-              tension: .3,
-              borderColor: "#a11d1d",
-              backgroundColor: "#a11d1d22"
-            }]
+            labels: hours,
+            datasets: [
+              {
+                label: 'Last Month',
+                data: lastMonthData,
+                fill: true,
+                backgroundColor: 'rgba(161, 29, 29, 0.4)',
+                borderColor: '#a11d1d',
+                tension: 0.3,
+                stack: 'Stack 0'
+              },
+              {
+                label: 'This Month',
+                data: thisMonthData,
+                fill: true,
+                backgroundColor: 'rgba(29, 161, 29, 0.4)',
+                borderColor: '#1da11d',
+                tension: 0.3,
+                stack: 'Stack 0'
+              }
+            ]
           },
-          options: { responsive: true, scales: { y: { beginAtZero: true } } }
+          options: {
+            responsive: true,
+            scales: {
+              x: { title: { display: true, text: 'Time (hr)' } },
+              y: {
+                beginAtZero: true,
+                stacked: true,
+                title: { display: true, text: 'kW' }
+              }
+            },
+            plugins: {
+              tooltip: { mode: 'index', intersect: false },
+              legend: { position: 'top' }
+            }
+          }
         });
-
-        document.getElementById("paramLastMonth").textContent = Math.round(30000 + Math.random() * 5000).toLocaleString();
-        document.getElementById("paramThisMonth").textContent = Math.round(25000 + Math.random() * 5000).toLocaleString();
       }
 
       document.getElementById("btnGetData").addEventListener("click", renderParameters);

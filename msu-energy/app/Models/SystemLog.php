@@ -12,7 +12,13 @@ class SystemLog extends Model
     protected $table = 'system_logs';
 
     protected $fillable = [
-        'date', 'time', 'time_ed',
-        'total_kw', 'total_kvar', 'total_kva', 'total_pf',
+        'building', // added building
+        'date',
+        'time',
+        'time_ed',
+        'total_kw',
+        'total_kvar',
+        'total_kva',
+        'total_pf',
     ];
 }

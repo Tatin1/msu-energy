@@ -8,19 +8,128 @@
     {{-- Map Display --}}
     <div class="md:col-span-2 bg-gray-50 border rounded-2xl shadow p-4 relative overflow-hidden">
       <div class="relative">
-        <img src="{{ asset('images/msu-iit-map.jpg') }}" alt="MSU-IIT Campus Map" usemap="#msuMap"
+        <img src="{{ asset('images/msu-iit-map.png') }}" alt="MSU-IIT Campus Map" usemap="#msuMap"
           id="campusMap" class="rounded-xl w-full shadow-md">
 
         <!-- Accurate Clickable Map -->
         <map name="msuMap">
-          <area target="_self" alt="Gymnasium" title="Gymnasium" href="#" coords="1259,625,148" shape="circle" data-building="GYMNASIUM">
-          <area target="_self" alt="CASS" title="CASS" href="#" coords="546,269,102" shape="circle" data-building="CASS">
-          <area target="_self" alt="CED" title="CED" href="#" coords="1209,300,120" shape="circle" data-building="CED">
-          <area target="_self" alt="CSM" title="CSM" href="#" coords="950,676,740,561" shape="rect" data-building="CSM">
-          <area target="_self" alt="CBAA" title="CBAA" href="#" coords="819,387,695,255,573,449,768,490,787,463" shape="poly" data-building="CBAA">
-          <area target="_self" alt="CCS" title="CCS" href="#" coords="782,687,768,710,764,776,955,802,964,714" shape="poly" data-building="CCS">
-          <area target="_self" alt="COE" title="COE" href="#" coords="925,248,1072,267,996,562,842,536,846,412" shape="poly" data-building="COE">
-          <area target="_self" alt="MICEL" title="MICEL" href="#" coords="592,680,566,737,727,765,731,698" shape="poly" data-building="MICEL">
+
+          <area target="_self" alt="CCS" title="CCS" 
+                href="#" 
+                coords="590,732,587,788,739,813,753,742,604,721" 
+                shape="poly" data-building="CCS">
+
+          <area target="_self" alt="CPI" title="CPI" 
+                href="#" 
+                coords="435,759,457,707,565,732,571,778" 
+                shape="poly" data-building="CPI">
+
+          <area target="_self" alt="OMDH" title="OMDH" 
+                href="#" 
+                coords="381,699,356,737,409,760,431,713" 
+                shape="poly" data-building="OMDH">
+
+          <area target="_self" alt="OBA" title="OBA" 
+                href="#" 
+                coords="331,696,325,721,343,733,365,700" 
+                shape="poly" data-building="OBA">
+
+          <area target="_self" alt="Gymnasium" title="Gymnasium" 
+                href="#" 
+                coords="921,569,857,713,1020,771,1073,601,926,563" 
+                shape="poly" data-building="GYMNASIUM">
+
+          <area target="_self" alt="CSM" title="CSM" 
+                href="#" 
+                coords="601,611,545,680,694,715,746,637" 
+                shape="poly" data-building="CSM">
+
+          <area target="_self" alt="KTTO" title="KTTO" 
+                href="#" 
+                coords="299,702,259,740,279,756,321,719,321,734" 
+                shape="poly" data-building="KTTO">
+
+          <area target="_self" alt="Administrative" title="Administrative" 
+                href="#" 
+                coords="93,634,51,664,89,688,135,661" 
+                shape="poly" data-building="ADMINISTRATIVE">
+
+          <area target="_self" alt="Registrar" title="Registrar" 
+                href="#" 
+                coords="137,611,116,631,150,653,161,628" 
+                shape="poly" data-building="REGISTRAR">
+
+          <area target="_self" alt="IDS" title="IDS" 
+                href="#" 
+                coords="207,524,119,596,267,604,313,588,297,599,321,582" 
+                shape="poly" data-building="IDS">
+
+          <area target="_self" alt="Main Library" title="Main Library" 
+                href="#" 
+                coords="194,607,168,660,252,713,275,645" 
+                shape="poly" data-building="MAIN LIBRARY">
+
+          <area target="_self" alt="SID" title="SID" 
+                href="#" 
+                coords="323,596,275,623,309,665,357,608" 
+                shape="poly" data-building="SID">
+
+          <area target="_self" alt="COE Old Building Complex" 
+                title="COE Old Building Complex"
+                href="#" 
+                coords="428,583,392,656,514,686,561,618" 
+                shape="poly" data-building="COE OLD BUILDING COMPLEX">
+
+          <area target="_self" alt="KASAMA" title="KASAMA" 
+                href="#" 
+                coords="397,488,352,541,381,549,413,498" 
+                shape="poly" data-building="KASAMA">
+
+          <area target="_self" alt="CASS" title="CASS" 
+                href="#" 
+                coords="362,320,337,435,455,480,502,339" 
+                shape="poly" data-building="CASS">
+
+          <area target="_self" alt="CEBA" title="CEBA" 
+                href="#" 
+                coords="533,381,439,564,579,587,622,502" 
+                shape="poly" data-building="CEBA">
+
+          <area target="_self" alt="SET" title="SET" 
+                href="#" 
+                coords="631,262,573,356,781,378,787,295" 
+                shape="poly" data-building="SET">
+
+          <area target="_self" alt="COE" title="COE" 
+                href="#" 
+                coords="711,380,616,595,774,629,825,395" 
+                shape="poly" data-building="COE">
+
+          <area target="_self" alt="CED" title="CED" 
+                href="#" 
+                coords="883,342,831,469,956,486,1013,385" 
+                shape="poly" data-building="CED">
+
+          <area target="_self" alt="Graduate Dorm" title="Graduate Dorm" 
+                href="#" 
+                coords="991,197,970,274,1052,281,1061,216" 
+                shape="poly" data-building="GRADUATE DORM">
+
+          <area target="_self" alt="PRISM" title="PRISM" 
+                href="#" 
+                coords="1120,246,1105,320,1236,362,1252,293" 
+                shape="poly" data-building="PRISM">
+
+          <area target="_self" alt="IPDM" title="IPDM" 
+                href="#" 
+                coords="1361,341,1325,378,1399,411,1415,376" 
+                shape="poly" data-building="IPDM">
+
+          <area target="_self" alt="Bahay Alumni" title="Bahay Alumni" 
+                href="#" 
+                coords="1325,424,1302,455,1361,479,1384,444" 
+                shape="poly" data-building="BAHAY ALUMNI">
+
         </map>
 
         <!-- Tooltip -->
