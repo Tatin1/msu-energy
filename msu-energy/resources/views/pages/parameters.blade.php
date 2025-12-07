@@ -38,7 +38,7 @@
 
       <button id="btnGetData"
         class="btn bg-maroon text-white font-bold px-5 py-2 rounded-xl hover:bg-maroon-700">
-        Get Data
+        Refresh
       </button>
     </div>
   </div>

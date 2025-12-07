@@ -1,17 +1,38 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard') }}
-        </h2>
-    </x-slot>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    {{ __("You're logged in!") }}
-                </div>
-            </div>
+    <!-- Fullscreen Dashboard -->
+    <section id="dashboard" class="h-screen flex flex-col">
+        <!-- Status bar -->
+        <div class="statusbar">
+            <div class="brand">MSU-IIT ENERGY DASHBOARD</div>
+            <div class="clock">{{ now()->format('H:i') }}</div>
         </div>
-    </div>
+
+        <!-- Navbar -->
+        <div class="navbar">
+            <button class="tab-btn active">Overview</button>
+            <button class="tab-btn">Buildings</button>
+            <button class="tab-btn">Reports</button>
+        </div>
+
+        <!-- Main content -->
+        <div class="wrap grid grid-auto flex-1 overflow-y-auto p-6">
+            <!-- Example KPI cards -->
+            <div class="card">
+                <h3>Total Energy Consumption</h3>
+                <div class="kpi">1,245 kWh</div>
+            </div>
+
+            <div class="card">
+                <h3>Active Buildings</h3>
+                <div class="kpi">12</div>
+            </div>
+
+            <div class="card">
+                <h3>Offline Sensors</h3>
+                <div class="kpi">3</div>
+            </div>
+
+            <!-- Additional cards or charts -->
+        </div>
+    </section>
 </x-app-layout>

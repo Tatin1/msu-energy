@@ -61,12 +61,6 @@
           </div>
         </div>
 
-        {{-- FULLSCREEN BUTTON at bottom --}}
-        <div class="flex justify-end mt-2">
-          <button id="fullscreenBtn" class="text-maroon hover:text-maroon-700 text-3xl font-bold px-2 py-1 transition-opacity duration-200">
-              ⛶
-          </button>
-        </div>
 
       </div>
 
@@ -123,26 +117,7 @@
         }
       });
 
-      // Fullscreen functionality
-      const fullscreenBtn = document.getElementById("fullscreenBtn");
-      fullscreenBtn.addEventListener("click", () => {
-        if (!document.fullscreenElement) {
-          document.documentElement.requestFullscreen().catch(err => {
-            alert(`Error: ${err.message}`);
-          });
-        } else {
-          document.exitFullscreen();
-        }
-      });
-
-      // Hide fullscreen button when in fullscreen mode
-      document.addEventListener('fullscreenchange', () => {
-        if (document.fullscreenElement) {
-          fullscreenBtn.style.opacity = '0';
-        } else {
-          fullscreenBtn.style.opacity = '1';
-        }
-      });
+      
     });
   </script>
 

@@ -3,12 +3,23 @@
 @section('content')
 <section id="tables" class="space-y-10">
   <h1 class="text-3xl font-bold text-maroon mb-6">System Tables</h1>
+  
 
   {{-- Transformer Log Table --}}
-  <div class="card">
-    <h2 class="text-xl font-semibold text-maroon mb-3">Transformer Log</h2>
+  <div class="card relative">
+
+    <!-- Title + Export Button on the same level -->
+    <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-semibold text-maroon">Transformer Log</h2>
+
+        <button onclick="exportTableToCSV('transformer-log.csv', 'transformerTable')"
+            class="bg-maroon text-white px-3 py-1 rounded-lg text-sm hover:bg-maroon-700">
+            Export CSV
+        </button>
+    </div>
+
     <div class="overflow-x-auto">
-      <table class="min-w-full border border-gray-300 rounded-xl text-sm">
+      <table id="transformerTable" class="min-w-full border border-gray-300 rounded-xl text-sm">
         <thead class="bg-maroon text-white">
           <tr>
             <th class="px-4 py-2 text-left">#</th>
@@ -30,15 +41,7 @@
             <td class="px-4 py-2">{{ $row[0] }}</td>
             <td class="px-4 py-2">{{ $row[1] }}</td>
             <td class="px-4 py-2">{{ $row[2] }}</td>
-            <td class="px-4 py-2">
-              @if ($row[3] === 'Normal')
-                <span class="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold">Normal</span>
-              @elseif ($row[3] === 'Warning')
-                <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-semibold">Warning</span>
-              @else
-                <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-semibold">Critical</span>
-              @endif
-            </td>
+            <td class="px-4 py-2">{{ $row[3] }}</td>
             <td class="px-4 py-2 text-gray-600">{{ $row[4] }}</td>
           </tr>
           @endforeach
@@ -48,10 +51,20 @@
   </div>
 
   {{-- System Log Table --}}
-  <div class="card">
-    <h2 class="text-xl font-semibold text-maroon mb-3">System Log</h2>
+  <div class="card relative">
+
+    <!-- Title + Export Button on the same level -->
+    <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-semibold text-maroon">System Log</h2>
+
+        <button onclick="exportTableToCSV('system-log.csv', 'systemTable')"
+            class="bg-maroon text-white px-3 py-1 rounded-lg text-sm hover:bg-maroon-700">
+            Export CSV
+        </button>
+    </div>
+
     <div class="overflow-x-auto">
-      <table class="min-w-full border border-gray-300 rounded-xl text-sm">
+      <table id="systemTable" class="min-w-full border border-gray-300 rounded-xl text-sm">
         <thead class="bg-maroon text-white">
           <tr>
             <th class="px-4 py-2 text-left">#</th>
@@ -72,15 +85,7 @@
             <td class="px-4 py-2 font-medium">{{ $index + 1 }}</td>
             <td class="px-4 py-2">{{ $row[0] }}</td>
             <td class="px-4 py-2">{{ $row[1] }}</td>
-            <td class="px-4 py-2">
-              @if ($row[2] === 'Info')
-                <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-semibold">Info</span>
-              @elseif ($row[2] === 'Warning')
-                <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full text-xs font-semibold">Warning</span>
-              @else
-                <span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-semibold">Critical</span>
-              @endif
-            </td>
+            <td class="px-4 py-2">{{ $row[2] }}</td>
             <td class="px-4 py-2 text-gray-600">{{ $row[3] }}</td>
           </tr>
           @endforeach
@@ -88,5 +93,32 @@
       </table>
     </div>
   </div>
+
 </section>
+
+{{-- EXPORT SCRIPT --}}
+<script>
+function exportTableToCSV(filename, tableId) {
+    let csv = [];
+    let rows = document.querySelectorAll(`#${tableId} tr`);
+
+    for (let row of rows) {
+        let cols = row.querySelectorAll("th, td");
+        let rowData = [];
+        cols.forEach(col => rowData.push(col.innerText.replace(/,/g, "")));
+        csv.push(rowData.join(","));
+    }
+
+    let csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+
+    let downloadLink = document.createElement("a");
+    downloadLink.download = filename;
+    downloadLink.href = window.URL.createObjectURL(csvFile);
+    downloadLink.style.display = "none";
+
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+}
+</script>
+
 @endsection

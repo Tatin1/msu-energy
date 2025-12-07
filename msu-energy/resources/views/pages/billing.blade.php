@@ -8,28 +8,30 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
     <div class="card text-center">
       <div class="kpi-label">This Month</div>
-      <div id="thisMonthkW" class="kpi">1,245 kW</div>
+      <div id="thisMonthkW" class="kpi">0 kW</div>
     </div>
 
     <div class="card text-center">
-      <div class="kpi-label">Last Month</div>
-      <div id="lastMonthkW" class="kpi">1,180 kW</div>
+      <div class="kpi-label">Previous Month</div>
+      <div id="previousMonthkW" class="kpi">0 kW</div>
     </div>
 
     <div class="card text-center">
       <div class="kpi-label">Total Cost</div>
-      <div id="totalCost" class="kpi">₱8,950.00</div>
+      <div id="totalCost" class="kpi">₱0.00</div>
     </div>
 
     <div class="card text-center">
       <div class="kpi-label">Average PF</div>
-      <div id="avgPF" class="kpi">0.95</div>
+      <div id="avgPF" class="kpi">0.00</div>
     </div>
   </div>
 
   {{-- Filters --}}
   <div class="bg-panel p-5 rounded-2xl shadow mb-6">
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+      {{-- Building Selector --}}
       <div>
         <label class="block text-sm font-bold mb-1 text-gray-800">Building</label>
         <select id="billingBuilding" class="input w-full">
@@ -38,21 +40,27 @@
           <option value="CSM">CSM</option>
           <option value="CCS">CCS</option>
           <option value="PRISM">PRISM</option>
+          <option value="CED">CED</option>
+          <option value="CHR">CHR</option>
+          <option value="HOSTEL">HOSTEL</option>
         </select>
       </div>
 
+      {{-- Start Date --}}
       <div>
-        <label class="block text-sm font-bold mb-1 text-gray-800">Billing Period</label>
-        <input type="month" id="billingMonth" class="input w-full">
+        <label class="block text-sm font-bold mb-1 text-gray-800">Start Date</label>
+        <input type="date" id="billingStart" class="input w-full">
       </div>
 
+      {{-- End Date --}}
       <div>
-        <label class="block text-sm font-bold mb-1 text-gray-800">Compare To</label>
-        <input type="month" id="billingCompare" class="input w-full">
+        <label class="block text-sm font-bold mb-1 text-gray-800">End Date</label>
+        <input type="date" id="billingEnd" class="input w-full">
       </div>
 
       <div class="flex items-end">
-        <button id="btnBilling" class="btn bg-maroon text-white w-full py-2 hover:bg-maroon-700 font-bold rounded-xl">
+        <button id="btnBilling"
+          class="btn bg-maroon text-white w-full py-2 hover:bg-maroon-700 font-bold rounded-xl">
           Generate
         </button>
       </div>
@@ -61,76 +69,114 @@
 
   {{-- Charts --}}
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    {{-- Energy Consumption Chart --}}
     <div class="card">
-      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Energy Consumption (kW)</h2>
+      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Energy Consumption (kWh)</h2>
       <canvas id="billingEnergyChart" height="150"></canvas>
     </div>
 
+    {{-- Previous Month KW Chart --}}
     <div class="card">
-      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Cost Comparison (₱)</h2>
-      <canvas id="billingCostChart" height="150"></canvas>
+      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Previous Month Consumption (kWh)</h2>
+      <canvas id="previousMonthChart" height="150"></canvas>
     </div>
+
+  </div>
+
+  {{-- ALL BUILDINGS TOTAL KWH LINE GRAPH --}}
+  <div class="card mt-6">
+    <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Total KWh Consumption Trend (All Buildings)</h2>
+    <canvas id="totalKwhTrend" height="150"></canvas>
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const ctx1 = document.getElementById("billingEnergyChart").getContext("2d");
-      const ctx2 = document.getElementById("billingCostChart").getContext("2d");
-      let energyChart, costChart;
+    document.addEventListener("DOMContentLoaded", function () {
 
-      function generateBillingCharts() {
-        const buildings = ["COE", "SET", "CSM", "CCS", "PRISM"];
-        const energy = buildings.map(() => Math.floor(Math.random() * 2000) + 800);
-        const cost = buildings.map(kW => (kW * 7.5).toFixed(2)); // e.g. ₱7.5/kW
+      const ctxEnergy = document.getElementById("billingEnergyChart").getContext("2d");
+      const ctxPrev = document.getElementById("previousMonthChart").getContext("2d");
+      const ctxTrend = document.getElementById("totalKwhTrend").getContext("2d");
 
-        // Update KPI cards
-        document.getElementById("thisMonthkW").textContent = energy[0] + " kW";
-        document.getElementById("lastMonthkW").textContent = Math.round(energy[0] * 0.95) + " kW";
-        document.getElementById("totalCost").textContent = "₱" + cost.reduce((a, b) => parseFloat(a) + parseFloat(b), 0).toFixed(2);
-        document.getElementById("avgPF").textContent = (0.9 + Math.random() * 0.1).toFixed(2);
+      let energyChart, previousChart, trendChart;
+
+      function generateBilling() {
+
+        const buildings = ["COE", "SET", "CSM", "CCS", "PRISM", "CED", "CHR", "HOSTEL"];
+
+        const randomKwh = () => Math.floor(Math.random() * 2000) + 500;
+
+        const selectedBuilding = document.getElementById("billingBuilding").value;
+
+        // Random values for charts
+        const thisMonth = randomKwh();
+        const prevMonth = Math.floor(thisMonth * 0.92);
+        const buildingTotals = buildings.map(() => randomKwh());
+
+        // KPI Updates
+        document.getElementById("thisMonthkW").textContent = thisMonth + " kWh";
+        document.getElementById("previousMonthkW").textContent = prevMonth + " kWh";
+        document.getElementById("totalCost").textContent = "₱" + (thisMonth * 7.5).toFixed(2);
+        document.getElementById("avgPF").textContent = (0.90 + Math.random() * 0.10).toFixed(2);
 
         // Destroy existing charts
         if (energyChart) energyChart.destroy();
-        if (costChart) costChart.destroy();
+        if (previousChart) previousChart.destroy();
+        if (trendChart) trendChart.destroy();
 
-        // Energy chart
-        energyChart = new Chart(ctx1, {
+        // Energy Chart (for building)
+        energyChart = new Chart(ctxEnergy, {
           type: "bar",
           data: {
-            labels: buildings,
+            labels: ["Energy Consumption"],
             datasets: [{
-              label: "Energy (kW)",
-              data: energy,
+              label: selectedBuilding + " (kWh)",
+              data: [thisMonth],
               backgroundColor: "#a11d1d99",
               borderColor: "#a11d1d",
               borderWidth: 1,
               borderRadius: 8
             }]
-          },
-          options: { responsive: true, scales: { y: { beginAtZero: true } } }
+          }
         });
 
-        // Cost chart
-        costChart = new Chart(ctx2, {
+        // Previous Month Chart
+        previousChart = new Chart(ctxPrev, {
+          type: "bar",
+          data: {
+            labels: ["Previous Month"],
+            datasets: [{
+              label: "kWh",
+              data: [prevMonth],
+              backgroundColor: "#caa15a99",
+              borderColor: "#caa15a",
+              borderRadius: 8
+            }]
+          }
+        });
+
+        // LINE GRAPH FOR ALL BUILDINGS
+        trendChart = new Chart(ctxTrend, {
           type: "line",
           data: {
             labels: buildings,
             datasets: [{
-              label: "Cost (₱)",
-              data: cost,
-              borderColor: "#caa15a",
-              backgroundColor: "#caa15a44",
-              fill: true,
-              tension: 0.4
+              label: "Total kWh",
+              data: buildingTotals,
+              borderColor: "#a11d1d",
+              backgroundColor: "#a11d1d44",
+              tension: 0.4,
+              fill: true
             }]
-          },
-          options: { responsive: true, scales: { y: { beginAtZero: true } } }
+          }
         });
+
       }
 
-      document.getElementById("btnBilling").addEventListener("click", generateBillingCharts);
-      generateBillingCharts(); // initial render
+      document.getElementById("btnBilling").addEventListener("click", generateBilling);
+      generateBilling();
+
     });
   </script>
+
 </section>
 @endsection
