@@ -23,7 +23,7 @@
                 <div class="mb-4">
                     <x-input-label for="email" :value="__('Email')" />
                     <x-text-input id="email"
-                        class="block mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-maroon focus:border-maroon text-maroon"
+                        class="block p-1.5 mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-maroon focus:border-maroon text-maroon"
                         type="email" name="email" :value="old('email')" placeholder="Enter your email" required autofocus autocomplete="username" />
                     <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-500" />
                 </div>
@@ -32,7 +32,7 @@
                 <div class="mb-4">
                     <x-input-label for="password" :value="__('Password')" />
                     <x-text-input id="password"
-                        class="block mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-maroon focus:border-maroon text-maroon"
+                        class="block p-1.5 mt-1 w-full border-gray-300 rounded-lg shadow-sm focus:ring-maroon focus:border-maroon text-maroon"
                         type="password" name="password" placeholder="Enter your password" required autocomplete="current-password" />
                     <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-500" />
                 </div>
