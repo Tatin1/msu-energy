@@ -1,6 +1,9 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+  $colorPalette = ['#581313', '#f28c38', '#e03a3a', '#3fa4ff', '#ff7a7a'];
+@endphp
 <section id="dashboard" class="w-full max-w-[1400px] mx-auto">
 
   <h1 class="text-4xl font-extrabold text-center text-maroon tracking-wide mb-6">
@@ -27,11 +30,17 @@
 
         {{-- Legend --}}
         <div class="flex justify-center mt-3 space-x-4 text-xs font-semibold flex-wrap">
-          <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#581313] inline-block"></span> BLDG1: COE</div>
+          {{-- <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#581313] inline-block"></span> BLDG1: COE</div>
           <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#f28c38] inline-block"></span> BLDG2: SET</div>
           <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#e03a3a] inline-block"></span> BLDG3: CSM</div>
           <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#3fa4ff] inline-block"></span> BLDG4: CCS</div>
-          <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#ff7a7a] inline-block"></span> BLDG5: PRISM</div>
+          <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#ff7a7a] inline-block"></span> BLDG5: PRISM</div> --}}
+          @forelse($labels as $index => $code)
+            @php $color = $colorPalette[$index % count($colorPalette)]; @endphp
+            <div class="flex items-center gap-1"><span class="w-4 h-4 inline-block" style="background-color: {{ $color }}"></span> {{ $code }}</div>
+          @empty
+            <span class="text-gray-500">No readings available yet</span>
+          @endforelse
         </div>
       </div>
 
@@ -42,22 +51,22 @@
         <div class="flex flex-col gap-3 flex-1">
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
             <h3 class="font-bold text-sm mb-1">TOTAL POWER (kW)</h3>
-            <p class="text-2xl font-extrabold">{{ number_format($totalPower ?? 300000, 0) }}</p>
+            <p class="text-2xl font-extrabold">{{ number_format($totalPower ?? 0, 0) }}</p>
           </div>
 
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
             <h3 class="font-bold text-sm mb-1">POWER FACTOR (PF)</h3>
-            <p class="text-2xl font-extrabold">{{ number_format($avgPF ?? 0.9423, 4) }}</p>
+            <p class="text-2xl font-extrabold">{{ number_format($avgPF ?? 0, 4) }}</p>
           </div>
 
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
             <h3 class="font-bold text-sm mb-1">LAST MONTH (kW)</h3>
-            <p class="text-2xl font-extrabold">{{ number_format($lastMonthkW ?? 350160, 0) }}</p>
+            <p class="text-2xl font-extrabold">{{ number_format($lastMonthkW ?? 0, 0) }}</p>
           </div>
 
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
             <h3 class="font-bold text-sm mb-1">THIS MONTH (kW)</h3>
-            <p class="text-2xl font-extrabold">{{ number_format($thisMonthkW ?? 352512, 0) }}</p>
+            <p class="text-2xl font-extrabold">{{ number_format($thisMonthkW ?? 0, 0) }}</p>
           </div>
         </div>
 
@@ -75,6 +84,9 @@
       const values = {!! json_encode($values ?? [80,60,50,70,100]) !!};
       const prevValues = {!! json_encode($prevValues ?? [75,55,45,65,90]) !!};
 
+      const palette = {!! json_encode($colorPalette) !!};
+      const colors = labels.map((_, idx) => palette[idx % palette.length] ?? '#581313');
+
       // Main Chart
       const ctx = document.getElementById("buildingChart").getContext("2d");
       new Chart(ctx, {
@@ -84,7 +96,8 @@
           datasets: [{
             label: "kW",
             data: values,
-            backgroundColor: ["#581313", "#f28c38", "#e03a3a", "#3fa4ff", "#ff7a7a"],
+            // backgroundColor: ['#581313', '#f28c38', '#e03a3a', '#3fa4ff', '#ff7a7a'],
+            backgroundColor: colors,
             borderRadius: 8
           }]
         },
@@ -106,7 +119,8 @@
           datasets: [{
             label: "kW",
             data: prevValues,
-            backgroundColor: ["#581313", "#f28c38", "#e03a3a", "#3fa4ff", "#ff7a7a"],
+            // backgroundColor: ['#581313', '#f28c38', '#e03a3a', '#3fa4ff', '#ff7a7a'],
+            backgroundColor: colors,
             borderRadius: 8
           }]
         },
