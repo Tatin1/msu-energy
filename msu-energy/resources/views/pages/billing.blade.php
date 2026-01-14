@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+  $today = now()->timezone(config('app.timezone'));
+  $defaultStart = $today->copy()->startOfMonth()->toDateString();
+  $defaultEnd = $today->toDateString();
+@endphp
 <section id="billing">
   <h1 class="text-3xl font-bold text-maroon mb-6">Billing Summary</h1>
 
@@ -8,23 +13,26 @@
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
     <div class="card text-center">
       <div class="kpi-label">This Month</div>
-      <div id="thisMonthkW" class="kpi">0 kW</div>
+      <div id="thisMonthkW" class="kpi">{{ number_format($summary['this_month_kwh'] ?? 0, 0) }} kWh</div>
     </div>
 
     <div class="card text-center">
       <div class="kpi-label">Previous Month</div>
-      <div id="previousMonthkW" class="kpi">0 kW</div>
+      <div id="previousMonthkW" class="kpi">{{ number_format($summary['last_month_kwh'] ?? 0, 0) }} kWh</div>
     </div>
 
     <div class="card text-center">
       <div class="kpi-label">Total Cost</div>
-      <div id="totalCost" class="kpi">₱0.00</div>
+      <div id="totalCost" class="kpi">₱{{ number_format($summary['total_cost'] ?? 0, 2) }}</div>
     </div>
 
     <div class="card text-center">
       <div class="kpi-label">Average PF</div>
-      <div id="avgPF" class="kpi">0.00</div>
+      <div id="avgPF" class="kpi">{{ number_format($summary['avg_pf'] ?? 0, 3) }}</div>
     </div>
+    <p id="billingStatus" class="text-xs text-gray-500 mt-3">
+      Showing aggregate billing for the current month.
+    </p>
   </div>
 
   {{-- Filters --}}
@@ -35,27 +43,31 @@
       <div>
         <label class="block text-sm font-bold mb-1 text-gray-800">Building</label>
         <select id="billingBuilding" class="input w-full">
-          <option value="COE">COE</option>
+          {{-- <option value="COE">COE</option>
           <option value="SET">SET</option>
           <option value="CSM">CSM</option>
           <option value="CCS">CCS</option>
           <option value="PRISM">PRISM</option>
           <option value="CED">CED</option>
           <option value="CHR">CHR</option>
-          <option value="HOSTEL">HOSTEL</option>
+          <option value="HOSTEL">HOSTEL</option> --}}
+          <option value="">All Buildings</option>
+          @foreach($buildings as $building)
+            <option value="{{ $building['id'] }}">{{ $building['code'] }} – {{ $building['name'] }}</option>
+          @endforeach
         </select>
       </div>
 
       {{-- Start Date --}}
       <div>
         <label class="block text-sm font-bold mb-1 text-gray-800">Start Date</label>
-        <input type="date" id="billingStart" class="input w-full">
+        <input type="date" id="billingStart" class="input w-full" value="{{ $defaultStart }}">
       </div>
 
       {{-- End Date --}}
       <div>
         <label class="block text-sm font-bold mb-1 text-gray-800">End Date</label>
-        <input type="date" id="billingEnd" class="input w-full">
+        <input type="date" id="billingEnd" class="input w-full" value="{{ $defaultEnd }}">
       </div>
 
       <div class="flex items-end">
@@ -90,7 +102,162 @@
     <canvas id="totalKwhTrend" height="150"></canvas>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const summary = @json($summary);
+      const config = @json($chartConfig);
+
+      const buildingSelect = document.getElementById('billingBuilding');
+      const startInput = document.getElementById('billingStart');
+      const endInput = document.getElementById('billingEnd');
+      const generateBtn = document.getElementById('btnBilling');
+      const statusElement = document.getElementById('billingStatus');
+
+      const ctxEnergy = document.getElementById('billingEnergyChart').getContext('2d');
+      const ctxPrev = document.getElementById('previousMonthChart').getContext('2d');
+      const ctxTrend = document.getElementById('totalKwhTrend').getContext('2d');
+
+      let energyChart = null;
+      let previousChart = null;
+      let trendChart = null;
+
+      const buildingDataset = config.buildings.reduce((carry, item) => {
+        carry[String(item.id)] = item;
+        return carry;
+      }, {});
+
+      const formatNumber = (value, options = {}) => {
+        return new Intl.NumberFormat('en-PH', options).format(value ?? 0);
+      };
+
+      function updateKpis(payload = null) {
+        const thisMonth = payload ? payload.this_month_kwh : summary.this_month_kwh;
+        const lastMonth = payload ? payload.last_month_kwh : summary.last_month_kwh;
+        const cost = payload ? payload.cost : summary.total_cost;
+        const avgPf = payload && payload.avg_pf !== null ? payload.avg_pf : (summary.avg_pf ?? null);
+
+        document.getElementById('thisMonthkW').textContent = `${formatNumber(thisMonth, { maximumFractionDigits: 0 })} kWh`;
+        document.getElementById('previousMonthkW').textContent = `${formatNumber(lastMonth, { maximumFractionDigits: 0 })} kWh`;
+        document.getElementById('totalCost').textContent = `₱${formatNumber(cost, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('avgPF').textContent = avgPf !== null
+          ? formatNumber(avgPf, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
+          : '—';
+      }
+
+      function renderTrendChart() {
+        const labels = config.trend.map(point => point.label);
+        const values = config.trend.map(point => point.kwh);
+
+        if (trendChart) trendChart.destroy();
+
+        trendChart = new Chart(ctxTrend, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Total kWh',
+              data: values,
+              borderColor: '#a11d1d',
+              backgroundColor: '#a11d1d33',
+              tension: 0.35,
+              fill: true,
+              pointRadius: 3,
+            }],
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { display: false } },
+          },
+        });
+      }
+
+      function renderBuildingCharts(payload = null) {
+        const label = payload ? `${payload.code} – ${payload.name}` : 'All Buildings';
+        const thisMonth = payload ? payload.this_month_kwh : summary.this_month_kwh;
+        const lastMonth = payload ? payload.last_month_kwh : summary.last_month_kwh;
+
+        if (energyChart) energyChart.destroy();
+        if (previousChart) previousChart.destroy();
+
+        energyChart = new Chart(ctxEnergy, {
+          type: 'bar',
+          data: {
+            labels: [label],
+            datasets: [{
+              label: 'This Month (kWh)',
+              data: [thisMonth],
+              backgroundColor: '#a11d1d99',
+              borderColor: '#a11d1d',
+              borderRadius: 8,
+            }],
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { display: false } },
+          },
+        });
+
+        previousChart = new Chart(ctxPrev, {
+          type: 'bar',
+          data: {
+            labels: [label],
+            datasets: [{
+              label: 'Previous Month (kWh)',
+              data: [lastMonth],
+              backgroundColor: '#caa15a99',
+              borderColor: '#caa15a',
+              borderRadius: 8,
+            }],
+          },
+          options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } },
+            plugins: { legend: { display: false } },
+          },
+        });
+      }
+
+      function updateStatus(payload = null, range = null) {
+        if (!statusElement) {
+          return;
+        }
+
+        const target = payload ? `${payload.code} – ${payload.name}` : 'all buildings';
+        if (range && range.start && range.end) {
+          statusElement.textContent = `Showing ${target} from ${range.start} to ${range.end}.`;
+          return;
+        }
+
+        statusElement.textContent = `Showing ${target} for the current month.`;
+      }
+
+      function handleGenerate() {
+        const buildingId = buildingSelect.value;
+        const payload = buildingDataset[buildingId] ?? null;
+
+        const selectedRange = {
+          start: startInput.value,
+          end: endInput.value,
+        };
+
+        updateKpis(payload);
+        renderBuildingCharts(payload);
+        updateStatus(payload, selectedRange);
+      }
+
+      generateBtn.addEventListener('click', handleGenerate);
+
+      updateKpis();
+      renderBuildingCharts();
+      renderTrendChart();
+      updateStatus();
+    });
+  </script>
+
+{{-- <script>
     document.addEventListener("DOMContentLoaded", function () {
 
       const ctxEnergy = document.getElementById("billingEnergyChart").getContext("2d");
@@ -176,7 +343,7 @@
       generateBilling();
 
     });
-  </script>
+  </script> --}}
 
 </section>
 @endsection
