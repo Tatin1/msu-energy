@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+        /*
         // 🧱 Create sample building, meters, readings, and billing data
         $names = [
             ['code'=>'COE','name'=>'BLDG1: COE'],
@@ -66,6 +67,9 @@ class DatabaseSeeder extends Seeder
                 'total_bill'=>0
             ]);
         }
+        */
+
+        $this->call(DummyDataSeeder::class);
 
         // 💡 Default Tariff
         \App\Models\Tariff::create([

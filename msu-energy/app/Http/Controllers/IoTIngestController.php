@@ -21,7 +21,11 @@ class IoTIngestController extends Controller
 
         $payload = $validated;
         unset($payload['meter_code']);
-        $payload['recorded_at'] = Carbon::parse($payload['recorded_at']);
+        // $payload['recorded_at'] = Carbon::parse($payload['recorded_at']);
+        $payload['recorded_at'] = Carbon::parse(
+            $payload['recorded_at'] ?? now(),
+            config('app.timezone')
+        );
 
         $meter->readings()->create($payload);
 
