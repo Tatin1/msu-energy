@@ -1,6 +1,26 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+  $graphConfig = [
+    'buildings' => ($buildings ?? collect())->map(function ($building) {
+      return [
+        'id' => $building->id,
+        'code' => $building->code,
+        'name' => $building->name,
+        'meters' => $building->meters->map(function ($meter) {
+          return [
+            'id' => $meter->id,
+            'label' => $meter->label,
+            'code' => $meter->meter_code,
+          ];
+        })->values(),
+      ];
+    })->values(),
+    'parameters' => $parameters ?? [],
+    'defaultDate' => now()->toDateString(),
+  ];
+@endphp
 <section id="graphs" class="space-y-8">
   <h1 class="text-3xl font-bold text-maroon">Graphs</h1>
 
@@ -8,27 +28,40 @@
   <div class="card flex flex-wrap gap-4 items-end">
     <label>Date
       <input type="date" class="input" value="{{ date('Y-m-d') }}">
+      <input type="date" id="dateInput" class="input" value="{{ $graphConfig['defaultDate'] }}">
     </label>
 
     <label>Parameter
       <select id="paramSelect" class="input">
-        <option>Total Active Power</option>
+        {{-- <option>Total Active Power</option>
         <option>Total Reactive Power</option>
         <option>Total Apparent Power</option>
         <option>Frequency</option>
         <option>THD Voltage</option>
-        <option>THD Current</option>
+        <option>THD Current</option> --}}
+        @foreach($graphConfig['parameters'] as $parameter)
+          <option value="{{ $parameter['key'] }}">{{ $parameter['label'] }}</option>
+        @endforeach
       </select>
     </label>
 
-    <label>College / Meter
-      <select id="meterSelect" class="input">
-        <option>COE</option>
+    <label>Building
+      <select id="buildingSelect" class="input">
+        {{-- <option>COE</option>
         <option>CCS</option>
         <option>CSM</option>
         <option>CBAA</option>
         <option>CED</option>
-        <option>CON</option>
+        <option>CON</option> --}}
+        @foreach($graphConfig['buildings'] as $building)
+          <option value="{{ $building['id'] }}">{{ $building['code'] }} – {{ $building['name'] }}</option>
+        @endforeach
+      </select>
+    </label>
+
+    <label>Meter
+      <select id="meterSelect" class="input">
+        <option value="" disabled selected>Select a building first</option>
       </select>
     </label>
 
@@ -38,11 +71,169 @@
 
   {{-- Chart Display --}}
   <div class="card">
-    <h3 class="font-bold mb-2">Parameter Trends</h3>
-    <canvas id="graphCanvas" height="180"></canvas>
+    <div class="flex items-center justify-between mb-2">
+      <h3 class="font-bold">Parameter Trends</h3>
+      <span id="chartStatus" class="text-xs uppercase tracking-wide text-gray-500"></span>
+    </div>
+    <canvas id="graphCanvas" height="220"></canvas>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const ctx = document.getElementById("graphCanvas");
+    const dateInput = document.getElementById("dateInput");
+    const paramSelect = document.getElementById("paramSelect");
+    const buildingSelect = document.getElementById("buildingSelect");
+    const meterSelect = document.getElementById("meterSelect");
+    const enterBtn = document.getElementById("enterBtn");
+    const chartStatus = document.getElementById("chartStatus");
+
+    const config = @json($graphConfig);
+    const palette = ["#7a0e0e", "#f28c38", "#1f6feb", "#0f915a"];
+
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "",
+          data: [],
+          borderColor: palette[0],
+          backgroundColor: `${palette[0]}33`,
+          fill: true,
+          tension: 0.35,
+          pointRadius: 3,
+        }],
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: { beginAtZero: true },
+        },
+        plugins: {
+          legend: { display: false },
+        },
+      },
+    });
+
+    const state = {
+      building: buildingSelect.value,
+      meter: null,
+      parameter: paramSelect.value,
+      date: dateInput.value,
+    };
+
+    function updateStatus(message, tone = 'default') {
+      const tones = {
+        default: 'text-gray-500',
+        success: 'text-emerald-600',
+        warn: 'text-amber-600',
+        error: 'text-red-600',
+      };
+      chartStatus.className = `text-xs uppercase tracking-wide ${tones[tone] || tones.default}`;
+      chartStatus.textContent = message;
+    }
+
+    function populateMeters() {
+      const building = config.buildings.find((item) => String(item.id) === String(state.building));
+      meterSelect.innerHTML = '';
+
+      if (!building || building.meters.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.disabled = true;
+        option.selected = true;
+        option.textContent = 'No meters linked';
+        meterSelect.appendChild(option);
+        state.meter = null;
+        return;
+      }
+
+      building.meters.forEach((meter, index) => {
+        const option = document.createElement('option');
+        option.value = meter.id;
+        option.textContent = meter.label ? `${meter.label} (${meter.code})` : meter.code;
+        if (index === 0 || String(meter.id) === String(state.meter)) {
+          option.selected = true;
+          state.meter = meter.id;
+        }
+        meterSelect.appendChild(option);
+      });
+    }
+
+    async function fetchDataset() {
+      if (!state.meter) {
+        updateStatus('Select a meter to load data', 'warn');
+        chart.data.labels = [];
+        chart.data.datasets[0].data = [];
+        chart.update();
+        return;
+      }
+
+      updateStatus('Loading…');
+      const endpoint = `/api/meters/${state.meter}/daily/${state.parameter}/${state.date}`;
+
+      try {
+        const response = await fetch(endpoint);
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        const payload = await response.json();
+
+        const labels = payload.labels ?? [];
+        const values = payload.values ?? [];
+
+        chart.data.labels = labels;
+        chart.data.datasets[0].data = values;
+        chart.data.datasets[0].label = payload.parameterLabel || 'Parameter Trend';
+        chart.update();
+
+        if (!values.length) {
+          updateStatus('No readings for the selected date', 'warn');
+        } else {
+          updateStatus(`Loaded ${values.length} points`, 'success');
+        }
+      } catch (error) {
+        console.error(error);
+        chart.data.labels = [];
+        chart.data.datasets[0].data = [];
+        chart.update();
+        updateStatus('Failed to load data', 'error');
+      }
+    }
+
+    function handleBuildingChange(evt) {
+      state.building = evt.target.value;
+      populateMeters();
+    }
+
+    function handleMeterChange(evt) {
+      state.meter = evt.target.value;
+    }
+
+    function handleParamChange(evt) {
+      state.parameter = evt.target.value;
+    }
+
+    function handleDateChange(evt) {
+      state.date = evt.target.value;
+    }
+
+    buildingSelect.addEventListener('change', handleBuildingChange);
+    meterSelect.addEventListener('change', handleMeterChange);
+    paramSelect.addEventListener('change', handleParamChange);
+    dateInput.addEventListener('change', handleDateChange);
+    enterBtn.addEventListener('click', fetchDataset);
+
+    populateMeters();
+    fetchDataset();
+  });
+  </script>
+</section>
+@endsection
+
+{{-- <script>
   document.addEventListener("DOMContentLoaded", () => {
     const ctx = document.getElementById("graphCanvas");
 
@@ -132,6 +323,4 @@
     meterSelect.addEventListener("change", updateChart);
     enterBtn.addEventListener("click", updateChart);
   });
-  </script>
-</section>
-@endsection
+  </script> --}}

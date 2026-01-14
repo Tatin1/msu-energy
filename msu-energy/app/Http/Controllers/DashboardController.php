@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Building;
 use App\Models\Reading;
 use App\Models\SystemLog;
 use App\Models\TransformerLog;
@@ -85,7 +86,27 @@ class DashboardController extends Controller
 
         return view('pages.tables', compact('transformerRows', 'systemLogRows'));
     }
-    public function graphs() { return view('pages.graphs'); }
+    public function graphs()
+    {
+        // return view('pages.graphs');
+
+        $buildings = Building::query()
+            ->with(['meters:id,building_id,label,meter_code'])
+            ->select('id', 'code', 'name')
+            ->orderBy('code')
+            ->get();
+
+        $parameters = [
+            ['key' => 'active_power', 'label' => 'Total Active Power (kW)'],
+            ['key' => 'reactive_power', 'label' => 'Total Reactive Power (kVAR)'],
+            ['key' => 'apparent_power', 'label' => 'Total Apparent Power (kVA)'],
+            ['key' => 'power_factor', 'label' => 'Power Factor'],
+            ['key' => 'voltage1', 'label' => 'Voltage Phase A (V)'],
+            ['key' => 'current1', 'label' => 'Current Phase A (A)'],
+        ];
+
+        return view('pages.graphs', compact('buildings', 'parameters'));
+    }
     public function history() { return view('pages.history'); }
     public function options() { return view('pages.options'); }
     public function view() { return view('pages.view'); }
