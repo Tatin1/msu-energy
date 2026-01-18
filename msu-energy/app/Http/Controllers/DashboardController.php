@@ -161,7 +161,24 @@ class DashboardController extends Controller
             'buildingBootstrap' => $buildingBootstrap,
         ]);
     }
-    public function parameters() { return view('pages.parameters'); }
+    public function parameters()
+    {
+        // return view('pages.parameters');
+
+        $buildings = Building::query()
+            ->select('id', 'code', 'name')
+            ->orderBy('code')
+            ->get()
+            ->map(fn (Building $building) => [
+                'id' => $building->id,
+                'code' => $building->code,
+                'name' => $building->name,
+            ]);
+
+        return view('pages.parameters', [
+            'parameterBuildings' => $buildings,
+        ]);
+    }
     public function billing()
     {
         // return view('pages.billing');
