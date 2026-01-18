@@ -80,9 +80,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const labels = {!! json_encode($labels ?? ['COE','SET','CSM','CCS','PRISM']) !!};
-      const values = {!! json_encode($values ?? [80,60,50,70,100]) !!};
-      const prevValues = {!! json_encode($prevValues ?? [75,55,45,65,90]) !!};
+    //   const labels = {!! json_encode($labels ?? ['COE','SET','CSM','CCS','PRISM']) !!};
+    //   const values = {!! json_encode($values ?? [80,60,50,70,100]) !!};
+    //   const prevValues = {!! json_encode($prevValues ?? [75,55,45,65,90]) !!};
+      const labels = {!! json_encode($labels ?? []) !!};
+      const values = {!! json_encode($values ?? []) !!};
+      const prevValues = {!! json_encode($prevValues ?? []) !!};
 
       const palette = {!! json_encode($colorPalette) !!};
       const colors = labels.map((_, idx) => palette[idx % palette.length] ?? '#581313');

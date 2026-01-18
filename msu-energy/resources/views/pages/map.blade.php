@@ -1,6 +1,11 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+      $statusSeries = ($buildingStatus ?? collect())->values();
+      $initialBuilding = $statusSeries->first();
+      $buildingBootstrap = ($buildingBootstrap ?? collect())->values();
+@endphp
 <section id="map" class="space-y-6">
   <h1 class="text-3xl font-bold text-maroon">Campus Building Map</h1>
 
@@ -142,52 +147,235 @@
     {{-- Building Status --}}
     <div class="bg-white border rounded-2xl shadow p-4 overflow-y-auto max-h-[600px]">
       <h2 class="text-lg font-semibold text-maroon mb-2">Building Status</h2>
-      <ul id="buildingStatus" class="space-y-1 text-sm">
-        <li><strong>COE</strong> (Engineering) — <span class="status online">Online</span></li>
-        <li><strong>CCS</strong> (Computer Studies) — <span class="status idle">Idle</span></li>
-        <li><strong>CED</strong> (Education) — <span class="status offline">Offline</span></li>
-        <li><strong>CBAA</strong> (Business) — <span class="status idle">Idle</span></li>
-        <li><strong>CSM</strong> (Science & Math) — <span class="status online">Online</span></li>
-        <li><strong>CASS</strong> (Arts & Social Sciences) — <span class="status online">Online</span></li>
-        <li><strong>MICEL</strong> — <span class="status online">Online</span></li>
-        <li><strong>GYMNASIUM</strong> — <span class="status online">Online</span></li>
-      </ul>
+                  <ul id="buildingStatus" class="space-y-1 text-sm">
+                        {{--
+                        <li><strong>COE</strong> (Engineering) — <span class="status online">Online</span></li>
+                        <li><strong>CCS</strong> (Computer Studies) — <span class="status idle">Idle</span></li>
+                        <li><strong>CED</strong> (Education) — <span class="status offline">Offline</span></li>
+                        <li><strong>CBAA</strong> (Business) — <span class="status idle">Idle</span></li>
+                        <li><strong>CSM</strong> (Science & Math) — <span class="status online">Online</span></li>
+                        <li><strong>CASS</strong> (Arts & Social Sciences) — <span class="status online">Online</span></li>
+                        <li><strong>MICEL</strong> — <span class="status online">Online</span></li>
+                        <li><strong>GYMNASIUM</strong> — <span class="status online">Online</span></li>
+                        --}}
+                        @forelse($statusSeries as $building)
+                              @php
+                                    $statusLabel = strtoupper($building['status'] ?? 'unknown');
+                                    $statusReason = $building['status_reason'] ?? 'Awaiting telemetry';
+                                    $statusClass = $building['status'] ?? 'idle';
+                              @endphp
+                              <li data-building="{{ $building['code'] }}" class="flex flex-col gap-0.5">
+                                    <div>
+                                          <strong>{{ $building['code'] }}</strong>
+                                          <span class="text-gray-600">({{ $building['name'] }})</span>
+                                          — <span class="status {{ $statusClass }}">{{ $statusLabel }}</span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">{{ $statusReason }}</span>
+                              </li>
+                        @empty
+                              <li class="text-gray-500">No building telemetry available yet.</li>
+                        @endforelse
+                  </ul>
 
       <hr class="my-3">
-      <div id="building-info" class="text-sm text-gray-700">
-        <strong>COE</strong><br>
-        College of Engineering — Smart Meter: COE-1
-      </div>
+                  <div id="building-info" class="text-sm text-gray-700">
+                        {{--
+                        <strong>COE</strong><br>
+                        College of Engineering — Smart Meter: COE-1
+                        --}}
+                        @if($initialBuilding)
+                              <strong>{{ $initialBuilding['code'] }}</strong><br>
+                              {{ $initialBuilding['name'] }}<br>
+                              <span class="text-xs text-gray-500">{{ $initialBuilding['status_reason'] }}</span>
+                        @else
+                              <span class="text-gray-500">No building metadata is available yet.</span>
+                        @endif
+                  </div>
     </div>
   </div>
 
   {{-- Interactivity --}}
+      <script>
+            window.appConfig = window.appConfig || {};
+            window.appConfig.buildings = {!! json_encode($buildingBootstrap->toArray(), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!};
+      </script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/image-map-resizer/1.0.10/js/imageMapResizer.min.js"></script>
   <script>
   document.addEventListener("DOMContentLoaded", () => {
     imageMapResize(); // keeps map responsive
 
-    const tooltip = document.getElementById("tooltip");
-    const info = document.getElementById("building-info");
-    const mapImg = document.getElementById("campusMap");
+            const tooltip = document.getElementById("tooltip");
+            const info = document.getElementById("building-info");
+            const mapImg = document.getElementById("campusMap");
+            const statusList = document.getElementById("buildingStatus");
 
-    document.querySelectorAll("area").forEach(area => {
-      area.addEventListener("mousemove", e => {
-        tooltip.textContent = area.alt;
-        const rect = mapImg.getBoundingClientRect();
-        tooltip.style.left = (e.pageX - rect.left + 15) + "px";
-        tooltip.style.top = (e.pageY - rect.top + 15) + "px";
-        tooltip.classList.remove("hidden");
-      });
+            const state = {
+                  buildings: Array.isArray(window.appConfig?.buildings) ? window.appConfig.buildings : [],
+                  selectedCode: Array.isArray(window.appConfig?.buildings) && window.appConfig.buildings.length
+                        ? window.appConfig.buildings[0].code
+                        : null,
+            };
 
-      area.addEventListener("mouseleave", () => tooltip.classList.add("hidden"));
+            const normalizeCode = (value) => (value || '').toString().trim().toUpperCase();
 
-      area.addEventListener("click", e => {
-        e.preventDefault();
-        const name = area.dataset.building;
-        info.innerHTML = `<strong>${name}</strong><br>Energy usage and smart meter data for ${name} are currently being monitored.`;
-      });
-    });
+            const getBuildingByCode = (code) => {
+                  if (!code) return null;
+                  const target = normalizeCode(code);
+                  return state.buildings.find((building) => normalizeCode(building.code) === target) ?? null;
+            };
+
+            const renderBuildingInfo = (building) => {
+                  if (!info) return;
+
+                  if (!building) {
+                        info.innerHTML = '<span class="text-gray-500">Select a building on the map or seed data to view telemetry.</span>';
+                        return;
+                  }
+
+                  state.selectedCode = building.code;
+
+                  const updatedAt = building.latest_reading_at
+                        ? new Date(building.latest_reading_at).toLocaleString()
+                        : 'No readings yet';
+
+                  const statusNote = building.status_reason ?? 'Awaiting telemetry';
+
+                  info.innerHTML = '';
+                  const title = document.createElement('strong');
+                  title.textContent = building.code;
+                  const lineBreak = document.createElement('br');
+                  const nameNode = document.createTextNode(building.name ?? 'Unknown building');
+                  const lineBreak2 = document.createElement('br');
+                  const detail = document.createElement('span');
+                  detail.className = 'text-xs text-gray-500';
+                  detail.textContent = `${statusNote} (${updatedAt})`;
+
+                  info.append(title, lineBreak, nameNode, lineBreak2, detail);
+            };
+
+            const statusClass = (status) => ({
+                  online: 'online',
+                  idle: 'idle',
+                  offline: 'offline',
+            })[status] ?? 'idle';
+
+            const renderStatusList = (buildings) => {
+                  if (!statusList) {
+                        return;
+                  }
+
+                  statusList.innerHTML = '';
+
+                  if (!buildings?.length) {
+                        const emptyRow = document.createElement('li');
+                        emptyRow.className = 'text-gray-500';
+                        emptyRow.textContent = 'No building telemetry available yet.';
+                        statusList.appendChild(emptyRow);
+                        return;
+                  }
+
+                  buildings.forEach((building) => {
+                        const li = document.createElement('li');
+                        li.dataset.building = building.code;
+                        li.className = 'flex flex-col gap-0.5 rounded-lg px-2 py-1';
+
+                        const header = document.createElement('div');
+                        const codeNode = document.createElement('strong');
+                        codeNode.textContent = building.code;
+                        const nameNode = document.createElement('span');
+                        nameNode.className = 'text-gray-600';
+                        nameNode.textContent = ` (${building.name})`;
+
+                        const badge = document.createElement('span');
+                        badge.className = `status ${statusClass(building.status)}`;
+                        badge.textContent = (building.status ?? 'unknown').toUpperCase();
+
+                        header.append(codeNode);
+                        header.appendChild(nameNode);
+                        header.append(' — ');
+                        header.appendChild(badge);
+
+                        const reason = document.createElement('span');
+                        reason.className = 'text-xs text-gray-500';
+                        reason.textContent = building.status_reason ?? 'Awaiting telemetry';
+
+                        li.append(header, reason);
+
+                        if (state.selectedCode && normalizeCode(state.selectedCode) === normalizeCode(building.code)) {
+                              li.classList.add('status-row-active');
+                        }
+
+                        li.addEventListener('click', () => {
+                              renderBuildingInfo(building);
+                              renderStatusList(state.buildings);
+                        });
+
+                        statusList.appendChild(li);
+                  });
+            };
+
+            const refreshBuildingStatus = async () => {
+                  try {
+                        const response = await fetch('/api/buildings', {
+                              headers: { 'Accept': 'application/json' },
+                        });
+
+                        if (!response.ok) {
+                              throw new Error(await response.text());
+                        }
+
+                        const payload = await response.json();
+                        if (Array.isArray(payload)) {
+                              state.buildings = payload;
+                              renderStatusList(state.buildings);
+                              const selected = getBuildingByCode(state.selectedCode) ?? state.buildings[0] ?? null;
+                              renderBuildingInfo(selected);
+                        }
+                  } catch (error) {
+                        console.warn('Unable to refresh building status', error);
+                  }
+            };
+
+            renderStatusList(state.buildings);
+            renderBuildingInfo(getBuildingByCode(state.selectedCode) ?? state.buildings[0] ?? null);
+            refreshBuildingStatus();
+            setInterval(refreshBuildingStatus, 60000);
+
+            const escapeSelector = (value) => {
+                  if (window.CSS && typeof window.CSS.escape === 'function') {
+                        return window.CSS.escape(value);
+                  }
+                  return (value || '').toString().replace(/([^a-zA-Z0-9_-])/g, '\\$1');
+            };
+
+            const highlightStatusRow = (code) => {
+                  if (!statusList) return;
+                  const target = statusList.querySelector(`[data-building="${escapeSelector(code)}"]`);
+                  if (!target) return;
+                  target.classList.add('status-row-active');
+                  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  setTimeout(() => target.classList.remove('status-row-active'), 1200);
+            };
+
+            document.querySelectorAll('area').forEach((area) => {
+                  area.addEventListener('mousemove', (e) => {
+                        tooltip.textContent = area.alt;
+                        const rect = mapImg.getBoundingClientRect();
+                        tooltip.style.left = `${e.pageX - rect.left + 15}px`;
+                        tooltip.style.top = `${e.pageY - rect.top + 15}px`;
+                        tooltip.classList.remove('hidden');
+                  });
+
+                  area.addEventListener('mouseleave', () => tooltip.classList.add('hidden'));
+
+                  area.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const building = getBuildingByCode(area.dataset.building);
+                        renderBuildingInfo(building ?? { code: area.dataset.building, name: area.title });
+                        renderStatusList(state.buildings);
+                        highlightStatusRow(area.dataset.building);
+                  });
+            });
   });
   </script>
 
@@ -203,6 +391,11 @@
     .status.online { background: #d1fae5; color: #047857; }
     .status.offline { background: #fee2e2; color: #b91c1c; }
     .status.idle { background: #fef9c3; color: #a16207; }
+            .status-row-active {
+                  background: rgba(161, 29, 29, 0.08);
+                  border: 1px solid #a11d1d;
+                  font-weight: 600;
+            }
   </style>
 </section>
 @endsection

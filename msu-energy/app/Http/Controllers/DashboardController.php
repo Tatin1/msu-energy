@@ -8,6 +8,7 @@ use App\Models\Reading;
 use App\Models\SystemLog;
 use App\Models\Tariff;
 use App\Models\TransformerLog;
+use App\Support\BuildingStatusFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
@@ -75,8 +76,91 @@ class DashboardController extends Controller
         ));
     }
 
+    public function apiDashboard()
+    {
+        $now = now();
+        $currentStart = $now->copy()->startOfMonth();
+        $previousStart = $currentStart->copy()->subMonth();
+        $previousEnd = $currentStart->copy()->subSecond();
+
+        $currentTotals = $this->buildingEnergyTotals($currentStart, $now);
+        $previousTotals = $this->buildingEnergyTotals($previousStart, $previousEnd)
+            ->keyBy('label');
+
+        $labels = $currentTotals->pluck('label')->toArray();
+        $values = $currentTotals->pluck('total_kwh')->map(fn ($value) => round($value, 3))->toArray();
+        $prevValues = array_map(
+            fn ($label) => round($previousTotals->get($label)->total_kwh ?? 0, 3),
+            $labels
+        );
+
+        $fifteenMinutesAgo = $now->copy()->subMinutes(15);
+        $totalPower = (float) Reading::query()
+            ->whereNotNull('active_power')
+            ->whereBetween('recorded_at', [$fifteenMinutesAgo, $now])
+            ->sum('active_power');
+
+        $avgPF = (float) Reading::query()
+            ->whereNotNull('power_factor')
+            ->avg('power_factor');
+
+        $lastMonthKwh = (float) Reading::query()
+            ->whereBetween('recorded_at', [$previousStart, $previousEnd])
+            ->sum('kwh');
+
+        $thisMonthKwh = (float) Reading::query()
+            ->whereBetween('recorded_at', [$currentStart, $now])
+            ->sum('kwh');
+
+        $buildings = collect($labels)->map(function ($label, $index) use ($values, $prevValues) {
+            $current = $values[$index] ?? 0;
+            $previous = $prevValues[$index] ?? 0;
+
+            return [
+                'code' => $label,
+                'this_month_kwh' => $current,
+                'last_month_kwh' => $previous,
+                'delta_kwh' => round($current - $previous, 3),
+            ];
+        })->values();
+
+        return response()->json([
+            'totals' => [
+                'total_power' => round($totalPower, 3),
+                'avg_pf' => round($avgPF, 4),
+                'this_month_kwh' => round($thisMonthKwh, 3),
+                'last_month_kwh' => round($lastMonthKwh, 3),
+            ],
+            'buildings' => $buildings,
+            'generated_at' => $now->toIso8601String(),
+            'window' => [
+                'current_start' => $currentStart->toIso8601String(),
+                'current_end' => $now->toIso8601String(),
+                'previous_start' => $previousStart->toIso8601String(),
+                'previous_end' => $previousEnd->toIso8601String(),
+            ],
+        ]);
+    }
+
     // Other existing pages (map, graphs, etc.)
-    public function map() { return view('pages.map'); }
+    public function map()
+    {
+        // return view('pages.map');
+
+        $buildingStatus = BuildingStatusFormatter::summaries();
+        $buildingBootstrap = $buildingStatus->map(fn (array $building) => [
+            'code' => $building['code'],
+            'name' => $building['name'],
+            'status' => $building['status'],
+            'status_reason' => $building['status_reason'],
+            'latest_reading_at' => $building['latest_reading_at'],
+        ]);
+
+        return view('pages.map', [
+            'buildingStatus' => $buildingStatus,
+            'buildingBootstrap' => $buildingBootstrap,
+        ]);
+    }
     public function parameters() { return view('pages.parameters'); }
     public function billing()
     {
