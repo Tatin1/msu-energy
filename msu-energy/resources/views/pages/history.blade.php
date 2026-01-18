@@ -18,6 +18,7 @@
                 <span class="font-medium">Building:</span>
                 <select id="building-select" class="border rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-maroon">
                     <option value="">All</option>
+                    {{--
                     @php
                         $buildings = [
                             'CCS', 'CPI', 'OMDH', 'OBA', 'GYMNASIUM', 'CSM', 'KTTO', 'ADMINISTRATIVE',
@@ -27,6 +28,10 @@
                     @endphp
                     @foreach ($buildings as $building)
                         <option value="{{ $building }}">{{ $building }}</option>
+                    @endforeach
+                    --}}
+                    @foreach(($historyBuildings ?? collect()) as $building)
+                        <option value="{{ $building['code'] }}">{{ $building['code'] }}</option>
                     @endforeach
                 </select>
             </label>
@@ -60,30 +65,30 @@
                 </thead>
                 <tbody>
                     {{-- Dummy Data --}}
-                    @for ($i = 1; $i <= 20; $i++)
-                        @php
-                            $bld = $buildings[array_rand($buildings)];
-                            $day = 20 + ($i % 10);
-                        @endphp
-                        <tr class="hover:bg-gray-50" data-building="{{ $bld }}" data-date="2025-10-{{ $day }}">
-                            <td class="border px-3 py-2">{{ $i }}</td>
-                            <td class="border px-3 py-2">{{ $bld }}</td>
-                            <td class="border px-3 py-2">2025-10-{{ $day }}</td>
-                            <td class="border px-3 py-2">08:{{ 10 + ($i % 10) }}</td>
-                            <td class="border px-3 py-2">08:{{ 25 + ($i % 10) }}</td>
-                            <td class="border px-3 py-2">{{ 55 + $i }}</td>
-                            <td class="border px-3 py-2">{{ 220 + $i }}</td>
-                            <td class="border px-3 py-2">{{ 225 + $i }}</td>
-                            <td class="border px-3 py-2">{{ 230 + $i }}</td>
-                            <td class="border px-3 py-2">{{ 12 + $i/10 }}</td>
-                            <td class="border px-3 py-2">{{ 11 + $i/10 }}</td>
-                            <td class="border px-3 py-2">{{ 13 + $i/10 }}</td>
-                            <td class="border px-3 py-2">{{ 0.9 + $i/100 }}</td>
-                            <td class="border px-3 py-2">{{ 0.92 + $i/100 }}</td>
-                            <td class="border px-3 py-2">{{ 0.91 + $i/100 }}</td>
-                            <td class="border px-3 py-2">{{ 120 + $i*2.5 }}</td>
+                    @forelse(($historyBuildingLogs ?? collect()) as $log)
+                        <tr class="hover:bg-gray-50" data-building="{{ $log->building ?? $log->id }}" data-date="{{ optional($log->recorded_at)->toDateString() ?? '—' }}">
+                            <td class="border px-3 py-2">{{ $log->id }}</td>
+                            <td class="border px-3 py-2">{{ $log->building ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->toDateString() ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->format('H:i') ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->copy()->addMinutes(15)->format('H:i') ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->frequency ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->v1 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->v2 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->v3 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->a1 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->a2 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->a3 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->pf1 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->pf2 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->pf3 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->kwh ?? '—' }}</td>
                         </tr>
-                    @endfor
+                    @empty
+                        <tr>
+                            <td colspan="16" class="border px-3 py-4 text-center text-gray-500">No building logs available yet. Seed data or wait for IoT ingestion.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
@@ -103,8 +108,8 @@
                 <span class="font-medium">Building:</span>
                 <select id="system-building-select" class="border rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-maroon">
                     <option value="">All</option>
-                    @foreach ($buildings as $building)
-                        <option value="{{ $building }}">{{ $building }}</option>
+                    @foreach(($historyBuildings ?? collect()) as $building)
+                        <option value="{{ $building['code'] }}">{{ $building['code'] }}</option>
                     @endforeach
                 </select>
             </label>
@@ -131,23 +136,23 @@
                 </thead>
                 <tbody>
                     {{-- Dummy Data --}}
-                    @for ($i = 1; $i <= 20; $i++)
-                        @php
-                            $bld = $buildings[array_rand($buildings)];
-                            $day = 20 + ($i % 10);
-                        @endphp
-                        <tr class="hover:bg-gray-50" data-building="{{ $bld }}" data-date="2025-10-{{ $day }}">
-                            <td class="border px-3 py-2">{{ $i }}</td>
-                            <td class="border px-3 py-2">{{ $bld }}</td>
-                            <td class="border px-3 py-2">2025-10-{{ $day }}</td>
-                            <td class="border px-3 py-2">08:{{ 10 + ($i % 10) }}</td>
-                            <td class="border px-3 py-2">08:{{ 25 + ($i % 10) }}</td>
-                            <td class="border px-3 py-2">{{ 400 + $i }}</td>
-                            <td class="border px-3 py-2">{{ 180 + $i }}</td>
-                            <td class="border px-3 py-2">{{ 420 + $i }}</td>
-                            <td class="border px-3 py-2">{{ 0.9 + $i/100 }}</td>
+                    @forelse(($historySystemLogs ?? collect()) as $log)
+                        <tr class="hover:bg-gray-50" data-building="{{ $log->building ?? 'SYSTEM' }}" data-date="{{ $log->date ?? '—' }}">
+                            <td class="border px-3 py-2">{{ $log->id }}</td>
+                            <td class="border px-3 py-2">{{ $log->building ?? 'System' }}</td>
+                            <td class="border px-3 py-2">{{ $log->date ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->time ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->time_ed ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->total_kw ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->total_kvar ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->total_kva ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->total_pf ?? '—' }}</td>
                         </tr>
-                    @endfor
+                    @empty
+                        <tr>
+                            <td colspan="9" class="border px-3 py-4 text-center text-gray-500">No system logs available yet.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

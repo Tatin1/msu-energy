@@ -286,7 +286,37 @@ class DashboardController extends Controller
 
         return view('pages.graphs', compact('buildings', 'parameters'));
     }
-    public function history() { return view('pages.history'); }
+    public function history()
+    {
+        // return view('pages.history');
+
+        $buildings = Building::query()
+            ->select('id', 'code', 'name')
+            ->orderBy('code')
+            ->get()
+            ->map(fn (Building $building) => [
+                'id' => $building->id,
+                'code' => $building->code,
+                'name' => $building->name,
+            ]);
+
+        $buildingLogs = TransformerLog::query()
+            ->orderByDesc('recorded_at')
+            ->limit(50)
+            ->get();
+
+        $systemLogs = SystemLog::query()
+            ->orderByDesc('date')
+            ->orderByDesc('time')
+            ->limit(50)
+            ->get();
+
+        return view('pages.history', [
+            'historyBuildings' => $buildings,
+            'historyBuildingLogs' => $buildingLogs,
+            'historySystemLogs' => $systemLogs,
+        ]);
+    }
     public function options() { return view('pages.options'); }
     public function view() { return view('pages.view'); }
     public function help() { return view('pages.help'); }
