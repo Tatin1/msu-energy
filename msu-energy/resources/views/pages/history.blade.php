@@ -219,6 +219,210 @@
         systemBuildingSelect.addEventListener('change', filterSystemTable);
         systemDateInput.addEventListener('change', filterSystemTable);
         filterSystemTable();
+        */
+    </script>
+    <script>
+        const historyConfig = {
+            buildingEndpoint: "{{ url('/api/history/building-logs') }}",
+            systemEndpoint: "{{ url('/api/history/system-logs') }}",
+            exportBuildingRoute: "{{ route('export.building') }}",
+            exportSystemRoute: "{{ route('export.system') }}",
+            buildingColumns: 16,
+            systemColumns: 9,
+            perPage: 50,
+        };
+
+        const buildingSelect = document.getElementById('building-select');
+        const buildingDateInput = document.getElementById('building-date');
+        const buildingTableBody = document.querySelector('#building-table tbody');
+        const exportBuildingBtn = document.getElementById('exportBuildingBtn');
+
+        const systemBuildingSelect = document.getElementById('system-building-select');
+        const systemDateInput = document.getElementById('system-date');
+        const systemTableBody = document.querySelector('#system-table tbody');
+        const exportSystemBtn = document.getElementById('exportSystemBtn');
+
+        const defaultRequestOptions = {
+            headers: {
+                'Accept': 'application/json',
+            },
+        };
+
+        function escapeHtml(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatCell(value) {
+            if (value === null || value === undefined || String(value).trim() === '') {
+                return '—';
+            }
+
+            return escapeHtml(value);
+        }
+
+        function buildQueryString(filters, extras = {}) {
+            const params = new URLSearchParams();
+            const payload = { ...filters, ...extras };
+
+            Object.entries(payload).forEach(([key, value]) => {
+                if (value !== undefined && value !== null && String(value).trim() !== '') {
+                    params.set(key, value);
+                }
+            });
+
+            return params.toString();
+        }
+
+        function setTableMessage(tbody, message, colspan) {
+            tbody.innerHTML = `<tr><td colspan="${colspan}" class="border px-3 py-4 text-center text-gray-500">${message}</td></tr>`;
+        }
+
+        function renderBuildingRows(rows) {
+            if (!rows.length) {
+                setTableMessage(buildingTableBody, 'No building logs match the current filters.', historyConfig.buildingColumns);
+                return;
+            }
+
+            buildingTableBody.innerHTML = rows.map((row) => {
+                const buildingValue = row.building ?? '—';
+                const dateValue = row.date ?? '—';
+
+                return `
+                    <tr class="hover:bg-gray-50" data-building="${escapeHtml(buildingValue)}" data-date="${escapeHtml(dateValue)}">
+                        <td class="border px-3 py-2">${formatCell(row.id)}</td>
+                        <td class="border px-3 py-2">${formatCell(buildingValue)}</td>
+                        <td class="border px-3 py-2">${formatCell(dateValue)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.time)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.time_ed)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.f)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.v1)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.v2)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.v3)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.a1)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.a2)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.a3)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.pf1)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.pf2)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.pf3)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.kwh)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderSystemRows(rows) {
+            if (!rows.length) {
+                setTableMessage(systemTableBody, 'No system logs match the current filters.', historyConfig.systemColumns);
+                return;
+            }
+
+            systemTableBody.innerHTML = rows.map((row) => {
+                const buildingValue = row.building ?? 'System';
+                const dateValue = row.date ?? '—';
+
+                return `
+                    <tr class="hover:bg-gray-50" data-building="${escapeHtml(buildingValue)}" data-date="${escapeHtml(dateValue)}">
+                        <td class="border px-3 py-2">${formatCell(row.id)}</td>
+                        <td class="border px-3 py-2">${formatCell(buildingValue)}</td>
+                        <td class="border px-3 py-2">${formatCell(dateValue)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.time)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.time_ed)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.total_kw)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.total_kvar)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.total_kva)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.total_pf)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadBuildingLogs() {
+            setTableMessage(buildingTableBody, 'Loading building logs…', historyConfig.buildingColumns);
+
+            const query = buildQueryString({
+                building: buildingSelect.value,
+                date: buildingDateInput.value,
+            }, { per_page: historyConfig.perPage });
+
+            const url = query
+                ? `${historyConfig.buildingEndpoint}?${query}`
+                : `${historyConfig.buildingEndpoint}?per_page=${historyConfig.perPage}`;
+
+            try {
+                const response = await fetch(url, defaultRequestOptions);
+                if (!response.ok) {
+                    throw new Error('Unable to fetch building logs');
+                }
+
+                const payload = await response.json();
+                renderBuildingRows(payload.data ?? []);
+            } catch (error) {
+                console.error(error);
+                setTableMessage(buildingTableBody, 'Unable to load building logs. Please try again.', historyConfig.buildingColumns);
+            }
+        }
+
+        async function loadSystemLogs() {
+            setTableMessage(systemTableBody, 'Loading system logs…', historyConfig.systemColumns);
+
+            const query = buildQueryString({
+                building: systemBuildingSelect.value,
+                date: systemDateInput.value,
+            }, { per_page: historyConfig.perPage });
+
+            const url = query
+                ? `${historyConfig.systemEndpoint}?${query}`
+                : `${historyConfig.systemEndpoint}?per_page=${historyConfig.perPage}`;
+
+            try {
+                const response = await fetch(url, defaultRequestOptions);
+                if (!response.ok) {
+                    throw new Error('Unable to fetch system logs');
+                }
+
+                const payload = await response.json();
+                renderSystemRows(payload.data ?? []);
+            } catch (error) {
+                console.error(error);
+                setTableMessage(systemTableBody, 'Unable to load system logs. Please try again.', historyConfig.systemColumns);
+            }
+        }
+
+        function exportWithFilters(baseUrl, filters) {
+            const query = buildQueryString(filters);
+            const target = query ? `${baseUrl}?${query}` : baseUrl;
+            window.location.href = target;
+        }
+
+        buildingSelect.addEventListener('change', loadBuildingLogs);
+        buildingDateInput.addEventListener('change', loadBuildingLogs);
+        exportBuildingBtn.addEventListener('click', () => {
+            exportWithFilters(historyConfig.exportBuildingRoute, {
+                building: buildingSelect.value,
+                date: buildingDateInput.value,
+            });
+        });
+
+        systemBuildingSelect.addEventListener('change', loadSystemLogs);
+        systemDateInput.addEventListener('change', loadSystemLogs);
+        exportSystemBtn.addEventListener('click', () => {
+            exportWithFilters(historyConfig.exportSystemRoute, {
+                building: systemBuildingSelect.value,
+                date: systemDateInput.value,
+            });
+        });
+
+        loadBuildingLogs();
+        loadSystemLogs();
     </script>
 </section>
 @endsection

@@ -11,9 +11,17 @@ class StoreSystemLogRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (!$this->filled('building')) {
+            $this->merge(['building' => 'SYSTEM']);
+        }
+    }
+
     public function rules(): array
     {
         return [
+            'building' => ['nullable', 'string', 'max:120'],
             'date' => ['required', 'date'],
             'time' => ['nullable', 'date_format:H:i'],
             'time_ed' => ['nullable', 'date_format:H:i'],

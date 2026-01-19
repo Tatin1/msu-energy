@@ -155,6 +155,7 @@ class DummyDataSeeder extends Seeder
             SystemLog::updateOrCreate(
                 ['date' => $snapshot['date'], 'time' => $snapshot['time']],
                 [
+                    'building' => 'SYSTEM',
                     'time_ed' => $snapshot['time_ed'],
                     'total_kw' => $snapshot['kw'],
                     'total_kvar' => $snapshot['kvar'],
