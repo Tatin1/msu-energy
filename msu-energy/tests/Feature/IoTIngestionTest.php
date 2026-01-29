@@ -127,6 +127,26 @@ class IoTIngestionTest extends TestCase
         ]);
     }
 
+    public function test_transformer_log_endpoint_persists_payload(): void
+    {
+        $payload = [
+            'recorded_at' => now()->toIso8601String(),
+            'frequency' => 60.02,
+            'v1' => 230.12,
+            'a1' => 12.5,
+            'pf' => 0.94,
+            'kwh' => 15.25,
+        ];
+
+        $this->postJson('/api/iot/transformer-logs', $payload, $this->authHeaders())
+            ->assertNoContent();
+
+        $this->assertDatabaseHas('transformer_logs', [
+            'pf' => 0.94,
+            'frequency' => 60.02,
+        ]);
+    }
+
     private function validReadingPayload(): array
     {
         return [

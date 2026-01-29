@@ -22,4 +22,5 @@ Route::prefix('iot')->middleware('iot.auth')->group(function () {
 	Route::post('readings', [IoTIngestController::class, 'storeReading']);
 	Route::post('building-logs', [IoTIngestController::class, 'storeBuildingLog']);
 	Route::post('system-logs', [IoTIngestController::class, 'storeSystemLog']);
+	Route::post('transformer-logs', [IoTIngestController::class, 'storeTransformerLog']);
 });

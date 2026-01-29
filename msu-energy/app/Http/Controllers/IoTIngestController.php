@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBuildingLogRequest;
 use App\Http\Requests\StoreReadingRequest;
 use App\Http\Requests\StoreSystemLogRequest;
+use App\Http\Requests\StoreTransformerLogRequest;
 use App\Models\BuildingLog;
 use App\Models\Meter;
 use App\Models\SystemLog;
+use App\Models\TransformerLog;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 
@@ -21,11 +23,7 @@ class IoTIngestController extends Controller
 
         $payload = $validated;
         unset($payload['meter_code']);
-        // $payload['recorded_at'] = Carbon::parse($payload['recorded_at']);
-        $payload['recorded_at'] = Carbon::parse(
-            $payload['recorded_at'] ?? now(),
-            config('app.timezone')
-        );
+        $payload['recorded_at'] = Carbon::parse($payload['recorded_at']);
 
         $meter->readings()->create($payload);
 
@@ -42,6 +40,19 @@ class IoTIngestController extends Controller
     public function storeSystemLog(StoreSystemLogRequest $request): Response
     {
         SystemLog::create($request->validated());
+
+        return response()->noContent();
+    }
+
+    public function storeTransformerLog(StoreTransformerLogRequest $request): Response
+    {
+        $payload = $request->validated();
+
+        if (! empty($payload['recorded_at'])) {
+            $payload['recorded_at'] = Carbon::parse($payload['recorded_at']);
+        }
+
+        TransformerLog::create($payload);
 
         return response()->noContent();
     }
