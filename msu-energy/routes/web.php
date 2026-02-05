@@ -13,12 +13,10 @@ use App\Http\Controllers\ExportController;
 |
 */
 
-// Redirect root ("/") to login if user is not authenticated
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Group all dashboard pages under "auth" middleware
 Route::middleware(['auth'])->group(function () {
 
     // Main dashboard routes
@@ -42,5 +40,4 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/export/system', [ExportController::class, 'exportSystem'])->name('export.system');
 });
 
-// Breeze’s built-in authentication routes (login, register, etc.)
 require __DIR__.'/auth.php';

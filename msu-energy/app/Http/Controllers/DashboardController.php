@@ -318,7 +318,116 @@ class DashboardController extends Controller
         ]);
     }
     public function options() { return view('pages.options'); }
-    public function view() { return view('pages.view'); }
+    public function view()
+    {
+        // return view('pages.view');
+
+        $now = now();
+        $timezone = config('app.timezone', 'UTC');
+
+        $realtimeStart = $now->copy()->subHours(23)->startOfHour();
+        $realtimeReadings = Reading::query()
+            ->select('active_power', 'recorded_at')
+            ->whereNotNull('recorded_at')
+            ->whereNotNull('active_power')
+            ->whereBetween('recorded_at', [$realtimeStart, $now])
+            ->orderBy('recorded_at')
+            ->get();
+
+        $realtimeBuckets = $realtimeReadings->groupBy(function (Reading $reading) use ($timezone) {
+            if ($reading->recorded_at === null) {
+                return null;
+            }
+
+            return $reading->recorded_at
+                ->copy()
+                ->timezone($timezone)
+                ->format('Y-m-d H:00:00');
+        })->filter();
+
+        $realtimeSeries = collect(range(0, 23))->map(function (int $offset) use ($realtimeStart, $realtimeBuckets, $timezone) {
+            $bucketStart = $realtimeStart->copy()->addHours($offset)->timezone($timezone);
+            $key = $bucketStart->format('Y-m-d H:00:00');
+
+            $total = isset($realtimeBuckets[$key])
+                ? (float) $realtimeBuckets[$key]->sum('active_power')
+                : 0;
+
+            return [
+                'label' => $bucketStart->format('g A'),
+                'total_kw' => round($total, 3),
+            ];
+        })->values()->all();
+
+        $tariffRate = (float) (Tariff::query()->value('rate') ?? 0);
+        $billingSeries = Building::query()
+            ->select('id', 'code', 'name')
+            ->with(['billing:id,building_id,this_month_kwh,last_month_kwh,total_bill'])
+            ->orderBy('code')
+            ->get()
+            ->map(function (Building $building) use ($tariffRate) {
+                $billing = $building->billing;
+                $thisMonth = (float) ($billing->this_month_kwh ?? 0);
+                $cost = $billing && $billing->total_bill !== null
+                    ? (float) $billing->total_bill
+                    : round($thisMonth * $tariffRate, 2);
+
+                return [
+                    'label' => $building->code,
+                    'name' => $building->name,
+                    'this_month_kwh' => round($thisMonth, 3),
+                    'cost' => round($cost, 2),
+                ];
+            })
+            ->filter(fn (array $series) => $series['this_month_kwh'] > 0 || $series['cost'] > 0)
+            ->values()
+            ->all();
+
+        $loadWindowStart = $now->copy()->subDay();
+        $rawLoadSeries = Reading::query()
+            ->join('meters', 'meters.id', '=', 'readings.meter_id')
+            ->join('buildings', 'buildings.id', '=', 'meters.building_id')
+            ->selectRaw('buildings.code as label, COALESCE(SUM(readings.active_power), 0) as total_kw')
+            ->whereNotNull('readings.recorded_at')
+            ->whereBetween('readings.recorded_at', [$loadWindowStart, $now])
+            ->groupBy('buildings.code')
+            ->orderByDesc('total_kw')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => $row->label,
+                'total_kw' => round((float) $row->total_kw, 3),
+            ]);
+
+        $loadTotal = (float) $rawLoadSeries->sum('total_kw');
+        $loadSeries = $rawLoadSeries->map(function (array $row) use ($loadTotal) {
+            $percentage = $loadTotal > 0 ? round(($row['total_kw'] / $loadTotal) * 100, 2) : 0;
+
+            return [
+                'label' => $row['label'],
+                'total_kw' => $row['total_kw'],
+                'percentage' => $percentage,
+            ];
+        })->values()->all();
+
+        $viewSummary = [
+            'realtime_window' => [
+                'start' => $realtimeStart->toIso8601String(),
+                'end' => $now->toIso8601String(),
+            ],
+            'billing_period' => $now->copy()->startOfMonth()->format('F Y'),
+            'load_window' => [
+                'start' => $loadWindowStart->toIso8601String(),
+                'end' => $now->toIso8601String(),
+            ],
+        ];
+
+        return view('pages.view', [
+            'realtimeSeries' => $realtimeSeries,
+            'billingSeries' => $billingSeries,
+            'loadSeries' => $loadSeries,
+            'viewSummary' => $viewSummary,
+        ]);
+    }
     public function help() { return view('pages.help'); }
     public function about() { return view('pages.about'); }
     private function buildingEnergyTotals(Carbon $start, Carbon $end): Collection
