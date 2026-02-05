@@ -69,7 +69,11 @@ class DatabaseSeeder extends Seeder
         }
         */
 
-        $this->call(DummyDataSeeder::class);
+        // $this->call(DummyDataSeeder::class);
+
+        $this->call([
+            BuildingSeeder::class,
+        ]);
 
         // 💡 Default Tariff
         \App\Models\Tariff::create([

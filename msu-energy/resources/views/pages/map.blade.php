@@ -57,7 +57,7 @@
           <area target="_self" alt="Administrative" title="Administrative" 
                 href="#" 
                 coords="93,634,51,664,89,688,135,661" 
-                shape="poly" data-building="ADMINISTRATIVE">
+                shape="poly" data-building="ADMIN">
 
           <area target="_self" alt="Registrar" title="Registrar" 
                 href="#" 
@@ -161,7 +161,7 @@
                         @forelse($statusSeries as $building)
                               @php
                                     $statusLabel = strtoupper($building['status'] ?? 'unknown');
-                                    $statusReason = $building['status_reason'] ?? 'Awaiting telemetry';
+                                    $statusReason = $building['status_reason'] ?? '';
                                     $statusClass = $building['status'] ?? 'idle';
                               @endphp
                               <li data-building="{{ $building['code'] }}" class="flex flex-col gap-0.5">
@@ -177,20 +177,8 @@
                         @endforelse
                   </ul>
 
-      <hr class="my-3">
-                  <div id="building-info" class="text-sm text-gray-700">
-                        {{--
-                        <strong>COE</strong><br>
-                        College of Engineering — Smart Meter: COE-1
-                        --}}
-                        @if($initialBuilding)
-                              <strong>{{ $initialBuilding['code'] }}</strong><br>
-                              {{ $initialBuilding['name'] }}<br>
-                              <span class="text-xs text-gray-500">{{ $initialBuilding['status_reason'] }}</span>
-                        @else
-                              <span class="text-gray-500">No building metadata is available yet.</span>
-                        @endif
-                  </div>
+        <hr class="my-3">
+        <div id="building-info" class="text-sm text-gray-700"></div>
     </div>
   </div>
 
@@ -228,7 +216,6 @@
                   if (!info) return;
 
                   if (!building) {
-                        info.innerHTML = '<span class="text-gray-500">Select a building on the map or seed data to view telemetry.</span>';
                         return;
                   }
 
@@ -236,9 +223,9 @@
 
                   const updatedAt = building.latest_reading_at
                         ? new Date(building.latest_reading_at).toLocaleString()
-                        : 'No readings yet';
+                        : 'N/A';
 
-                  const statusNote = building.status_reason ?? 'Awaiting telemetry';
+                  const statusNote = building.status_reason ?? '';
 
                   info.innerHTML = '';
                   const title = document.createElement('strong');
@@ -297,7 +284,7 @@
 
                         const reason = document.createElement('span');
                         reason.className = 'text-xs text-gray-500';
-                        reason.textContent = building.status_reason ?? 'Awaiting telemetry';
+                        reason.textContent = building.status_reason ?? '';
 
                         li.append(header, reason);
 
@@ -361,8 +348,8 @@
                   area.addEventListener('mousemove', (e) => {
                         tooltip.textContent = area.alt;
                         const rect = mapImg.getBoundingClientRect();
-                        tooltip.style.left = `${e.pageX - rect.left + 15}px`;
-                        tooltip.style.top = `${e.pageY - rect.top + 15}px`;
+                        tooltip.style.left = `${e.pageX - rect.left + 15 - window.scrollX}px`;
+                        tooltip.style.top = `${e.pageY - rect.top + 15 - window.scrollY}px`;
                         tooltip.classList.remove('hidden');
                   });
 

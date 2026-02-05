@@ -86,7 +86,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="16" class="border px-3 py-4 text-center text-gray-500">No building logs available yet. Seed data or wait for IoT ingestion.</td>
+                            <td colspan="16" class="border px-3 py-4 text-center text-gray-500">No building logs available yet.</td>
                         </tr>
                     @endforelse
                 </tbody>

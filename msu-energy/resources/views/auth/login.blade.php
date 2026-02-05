@@ -68,13 +68,6 @@
                     @endif
                 </div>
             </form>
-
-            <!-- Default Admin Info -->
-            <div class="mt-6 text-center text-xs text-gray-500">
-                <p><strong>Default Admin Account:</strong></p>
-                <p>Email: <code>admin@msuiit.edu.ph</code></p>
-                <p>Password: <code>admin123</code></p>
-            </div>
         </div>
     </div>
 </x-guest-layout>

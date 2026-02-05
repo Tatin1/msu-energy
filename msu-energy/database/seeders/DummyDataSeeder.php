@@ -33,7 +33,7 @@ class DummyDataSeeder extends Seeder
                 'reactive_power' => [25, 28, 27, 29, 30, 31, 30],
                 'apparent_power' => [115, 120, 125, 130, 128, 126, 124],
             ],
-            'CBAA' => [
+            'CEBA' => [
                 'active_power' => [100, 105, 110, 120, 115, 110, 108],
                 'reactive_power' => [28, 30, 32, 34, 33, 31, 30],
                 'apparent_power' => [110, 115, 120, 125, 123, 122, 120],
@@ -55,8 +55,8 @@ class DummyDataSeeder extends Seeder
             'SET' => ['name' => 'BLDG2: SET', 'series_key' => 'CCS', 'kwh_target' => 60, 'online' => true],
             'CSM' => ['name' => 'BLDG3: CSM', 'series_key' => 'CSM', 'kwh_target' => 50, 'online' => true],
             'CCS' => ['name' => 'BLDG4: CCS', 'series_key' => 'CCS', 'kwh_target' => 70, 'online' => true],
-            'PRISM' => ['name' => 'BLDG5: PRISM', 'series_key' => 'CBAA', 'kwh_target' => 100, 'online' => true],
-            'CBAA' => ['name' => 'College of Business Administration and Accountancy', 'series_key' => 'CBAA', 'kwh_target' => 55, 'online' => true],
+            'PRISM' => ['name' => 'BLDG5: PRISM', 'series_key' => 'CEBA', 'kwh_target' => 100, 'online' => true],
+            'CEBA' => ['name' => 'College of Economics and Business Administration', 'series_key' => 'CEBA', 'kwh_target' => 55, 'online' => true],
             'CED' => ['name' => 'College of Education', 'series_key' => 'CED', 'kwh_target' => 65, 'online' => true],
             'CON' => ['name' => 'College of Nursing', 'series_key' => 'CON', 'kwh_target' => 45, 'online' => true],
         ];

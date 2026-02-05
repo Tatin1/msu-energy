@@ -131,7 +131,7 @@
         const latestReading = readingSource.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at))[0] ?? null;
 
         if (!latestReading) {
-          paramTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500">No readings found for this building. Seed dummy data or wait for IoT ingestion.</td></tr>';
+          paramTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500">No readings found for this building.</td></tr>';
           lastMonthNode.textContent = '0';
           thisMonthNode.textContent = '0';
           if (chart) chart.destroy();
@@ -262,7 +262,7 @@
           notify(`Loaded ${buildingCode} parameters`, 'success');
         } catch (error) {
           console.error(error);
-          notify('Failed to load building parameters. Check the console or seed data.', 'error');
+          notify('Failed to load building parameters.', 'error');
         } finally {
           isLoading = false;
         }
