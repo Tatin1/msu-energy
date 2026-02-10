@@ -1,6 +1,7 @@
 import './bootstrap';
 import 'chart.js/auto';
 import imageMapResize from 'image-map-resizer';
+import { initRealtimeConsumers } from './realtime';
 
 // app.js — simplified, performs fetch to backend API and populates UI
 const fmtPeso = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 2 });
@@ -128,3 +129,7 @@ async function populateSelects(){
   await recalcBills();
 }
 populateSelects();
+
+document.addEventListener('DOMContentLoaded', () => {
+  initRealtimeConsumers();
+});

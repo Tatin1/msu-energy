@@ -29,7 +29,7 @@
         <canvas id="buildingChart" style="flex-grow:1;"></canvas>
 
         {{-- Legend --}}
-        <div class="flex justify-center mt-3 space-x-4 text-xs font-semibold flex-wrap">
+        <div id="dashboardLegend" class="flex justify-center mt-3 space-x-4 text-xs font-semibold flex-wrap">
           {{-- <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#581313] inline-block"></span> BLDG1: COE</div>
           <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#f28c38] inline-block"></span> BLDG2: SET</div>
           <div class="flex items-center gap-1"><span class="w-4 h-4 bg-[#e03a3a] inline-block"></span> BLDG3: CSM</div>
@@ -51,25 +51,26 @@
         <div class="flex flex-col gap-3 flex-1">
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
             <h3 class="font-bold text-sm mb-1">TOTAL POWER (kW)</h3>
-            <p class="text-2xl font-extrabold">{{ number_format($totalPower ?? 0, 0) }}</p>
+            <p id="dashboardTotalPower" class="text-2xl font-extrabold">{{ number_format($totalPower ?? 0, 0) }}</p>
           </div>
 
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
             <h3 class="font-bold text-sm mb-1">POWER FACTOR (PF)</h3>
-            <p class="text-2xl font-extrabold">{{ number_format($avgPF ?? 0, 4) }}</p>
+            <p id="dashboardAvgPf" class="text-2xl font-extrabold">{{ number_format($avgPF ?? 0, 4) }}</p>
           </div>
 
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
             <h3 class="font-bold text-sm mb-1">LAST MONTH (kW)</h3>
-            <p class="text-2xl font-extrabold">{{ number_format($lastMonthkW ?? 0, 0) }}</p>
+            <p id="dashboardLastMonth" class="text-2xl font-extrabold">{{ number_format($lastMonthkW ?? 0, 0) }}</p>
           </div>
 
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
             <h3 class="font-bold text-sm mb-1">THIS MONTH (kW)</h3>
-            <p class="text-2xl font-extrabold">{{ number_format($thisMonthkW ?? 0, 0) }}</p>
+            <p id="dashboardThisMonth" class="text-2xl font-extrabold">{{ number_format($thisMonthkW ?? 0, 0) }}</p>
           </div>
         </div>
 
+        <p id="dashboardUpdatedAt" class="text-center text-xs text-gray-500 mt-2">Last updated {{ now()->format('M d, Y H:i') }}</p>
 
       </div>
 
@@ -77,65 +78,46 @@
   </div>
 
   {{-- Chart Scripts --}}
+  {{--
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-    //   const labels = {!! json_encode($labels ?? ['COE','SET','CSM','CCS','PRISM']) !!};
-    //   const values = {!! json_encode($values ?? [80,60,50,70,100]) !!};
-    //   const prevValues = {!! json_encode($prevValues ?? [75,55,45,65,90]) !!};
       const labels = {!! json_encode($labels ?? []) !!};
       const values = {!! json_encode($values ?? []) !!};
       const prevValues = {!! json_encode($prevValues ?? []) !!};
-
       const palette = {!! json_encode($colorPalette) !!};
       const colors = labels.map((_, idx) => palette[idx % palette.length] ?? '#581313');
-
-      // Main Chart
       const ctx = document.getElementById("buildingChart").getContext("2d");
       new Chart(ctx, {
         type: "bar",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "kW",
-            data: values,
-            // backgroundColor: ['#581313', '#f28c38', '#e03a3a', '#3fa4ff', '#ff7a7a'],
-            backgroundColor: colors,
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: { beginAtZero: true, title: { display: true, text: "Kilowatt-Hour (kW)" } }
-          },
-          plugins: { legend: { display: false } }
-        }
+        data: { labels, datasets: [{ label: "kW", data: values, backgroundColor: colors, borderRadius: 8 }] },
+        options: { responsive: true, scales: { y: { beginAtZero: true, title: { display: true, text: "Kilowatt-Hour (kW)" } } }, plugins: { legend: { display: false } } }
       });
-
-      // Previous Month Chart
       const ctxPrev = document.getElementById("prevMonthChart").getContext("2d");
       new Chart(ctxPrev, {
         type: "bar",
-        data: {
-          labels: labels,
-          datasets: [{
-            label: "kW",
-            data: prevValues,
-            // backgroundColor: ['#581313', '#f28c38', '#e03a3a', '#3fa4ff', '#ff7a7a'],
-            backgroundColor: colors,
-            borderRadius: 8
-          }]
-        },
-        options: {
-          responsive: true,
-          scales: { y: { beginAtZero: true } },
-          plugins: { legend: { display: false } }
-        }
+        data: { labels, datasets: [{ label: "kW", data: prevValues, backgroundColor: colors, borderRadius: 8 }] },
+        options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
       });
-
-      
     });
+  </script>
+  --}}
+
+  <script>
+    window.dashboardBootstrap = {
+      chart: {
+        labels: {!! json_encode($labels ?? []) !!},
+        current: {!! json_encode($values ?? []) !!},
+        previous: {!! json_encode($prevValues ?? []) !!},
+      },
+      totals: {
+        total_power: {{ round($totalPower ?? 0, 3) }},
+        avg_pf: {{ round($avgPF ?? 0, 4) }},
+        last_month_kwh: {{ round($lastMonthkW ?? 0, 3) }},
+        this_month_kwh: {{ round($thisMonthkW ?? 0, 3) }},
+      },
+      generated_at: '{{ now()->toIso8601String() }}',
+    };
   </script>
 
 </section>

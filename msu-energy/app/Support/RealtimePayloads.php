@@ -92,10 +92,18 @@ class RealtimePayloads
                 }
 
                 return [
+                    'id' => $log->id,
                     'building' => $log->building,
                     'date' => $log->date,
                     'time' => $log->time,
                     'time_ed' => $log->time_ed,
+                    'f' => $log->f,
+                    'v1' => $log->v1,
+                    'v2' => $log->v2,
+                    'v3' => $log->v3,
+                    'a1' => $log->a1,
+                    'a2' => $log->a2,
+                    'a3' => $log->a3,
                     'kwh' => $log->kwh,
                     'pf1' => $log->pf1,
                     'pf2' => $log->pf2,
@@ -180,6 +188,7 @@ class RealtimePayloads
                 }
 
                 return [
+                    'id' => $log->id,
                     'building' => $log->building,
                     'date' => $log->date,
                     'time' => $log->time,
