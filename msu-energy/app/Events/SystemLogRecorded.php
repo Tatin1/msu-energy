@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Support\BroadcastChannels;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -26,7 +27,7 @@ class SystemLogRecorded implements ShouldBroadcast
 
     public function broadcastOn(): Channel
     {
-        return new Channel('system.logs');
+        return new Channel(BroadcastChannels::systemLogs());
     }
 
     public function broadcastAs(): string
