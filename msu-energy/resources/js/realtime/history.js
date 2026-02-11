@@ -142,11 +142,11 @@ export const mountHistoryRealtime = () => {
 
   if (buildingBody) {
     window.Echo.channel('building.logs')
-      .listen('BuildingLogRecorded', ({ payload }) => renderBuildingHistory(buildingBody, payload ?? []));
+      .listen('.BuildingLogRecorded', ({ payload }) => renderBuildingHistory(buildingBody, payload ?? []));
   }
 
   if (systemBody) {
     window.Echo.channel('system.logs')
-      .listen('SystemLogRecorded', ({ payload }) => renderSystemHistory(systemBody, payload ?? []));
+      .listen('.SystemLogRecorded', ({ payload }) => renderSystemHistory(systemBody, payload ?? []));
   }
 };

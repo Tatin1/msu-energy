@@ -22,14 +22,27 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
+  window.viewBootstrap = {
+    realtimeSeries: @json($realtimeSeries ?? []),
+    billingSeries: @json($billingSeries ?? []),
+    loadSeries: @json($loadSeries ?? []),
+    viewSummary: @json($viewSummary ?? []),
+  };
+
   document.addEventListener("DOMContentLoaded", () => {
     const viewDisplay = document.getElementById("viewDisplay");
     const viewButtons = document.querySelectorAll("[data-view]");
     let chartInstance = null;
-    const realtimeSeries = @json($realtimeSeries ?? []);
-    const billingSeries = @json($billingSeries ?? []);
-    const loadSeries = @json($loadSeries ?? []);
-    const viewSummary = @json($viewSummary ?? []);
+    let activeView = 'realtime';
+    let refreshTimer = null;
+
+    const datasets = {
+      realtimeSeries: window.viewBootstrap?.realtimeSeries ?? [],
+      billingSeries: window.viewBootstrap?.billingSeries ?? [],
+      loadSeries: window.viewBootstrap?.loadSeries ?? [],
+      viewSummary: window.viewBootstrap?.viewSummary ?? {},
+    };
+
     const palette = [
       "#7a0e0e",
       "#9d1b1b",
@@ -45,38 +58,33 @@
     const numberFormatter = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
     const currencyFormatter = new Intl.NumberFormat(undefined, { style: "currency", currency: "PHP", maximumFractionDigits: 0 });
 
-    // Load default view
-    renderView("realtime");
+    renderView(activeView);
 
-    // Handle view switching
     viewButtons.forEach(btn => {
       btn.addEventListener("click", () => {
         viewButtons.forEach(b => b.classList.remove("active-view"));
         btn.classList.add("active-view");
-        renderView(btn.dataset.view);
+        activeView = btn.dataset.view;
+        renderView(activeView);
       });
     });
 
     function renderView(type) {
-      // Clear previous chart if any
       if (chartInstance) chartInstance.destroy();
-
-      // Reset content
       viewDisplay.innerHTML = "";
       const wrapper = document.createElement("div");
 
-      // === REAL-TIME USAGE VIEW ===
       if (type === "realtime") {
-        if (!realtimeSeries.length) {
+        if (!datasets.realtimeSeries.length) {
           handleEmptyState("No meter readings recorded in the past 24 hours.");
           return;
         }
 
-        const totals = realtimeSeries.map(point => point.total_kw);
+        const totals = datasets.realtimeSeries.map(point => point.total_kw);
         const latestKw = totals.length ? totals[totals.length - 1] : 0;
         const peakKw = Math.max(...totals);
         const minKw = Math.min(...totals);
-        const realtimeWindow = viewSummary.realtime_window || {};
+        const realtimeWindow = datasets.viewSummary.realtime_window || {};
         const updatedAt = realtimeWindow.end
           ? new Date(realtimeWindow.end).toLocaleString()
           : "n/a";
@@ -103,12 +111,10 @@
         chartInstance = new Chart(ctx, {
           type: "line",
           data: {
-            // labels: ["8 AM","9 AM","10 AM","11 AM","12 PM","1 PM","2 PM"],
-            labels: realtimeSeries.map(point => point.label),
+            labels: datasets.realtimeSeries.map(point => point.label),
             datasets: [{
               label: "Active Power (kW)",
-              // data: [120,135,140,160,170,165,175],
-              data: realtimeSeries.map(point => point.total_kw),
+              data: datasets.realtimeSeries.map(point => point.total_kw),
               borderColor: "#7a0e0e",
               backgroundColor: "#7a0e0e33",
               fill: true,
@@ -121,25 +127,23 @@
           }
         });
       }
-
-      // === BILLING SUMMARY VIEW ===
       else if (type === "billing") {
-        if (!billingSeries.length) {
+        if (!datasets.billingSeries.length) {
           handleEmptyState("No billing records found for the current period.");
           return;
         }
 
-        const totalKwh = billingSeries.reduce((sum, row) => sum + row.this_month_kwh, 0);
-        const totalCost = billingSeries.reduce((sum, row) => sum + row.cost, 0);
+        const totalKwh = datasets.billingSeries.reduce((sum, row) => sum + row.this_month_kwh, 0);
+        const totalCost = datasets.billingSeries.reduce((sum, row) => sum + row.cost, 0);
         const billingMetrics = [
           renderMetric("Total kWh", numberFormatter.format(totalKwh)),
           renderMetric("Estimated Cost", currencyFormatter.format(totalCost)),
           renderMetric(
             "Average kWh",
-            numberFormatter.format(billingSeries.length ? totalKwh / billingSeries.length : 0)
+            numberFormatter.format(datasets.billingSeries.length ? totalKwh / datasets.billingSeries.length : 0)
           )
         ].join("");
-        const billingRows = billingSeries.map(row => `
+        const billingRows = datasets.billingSeries.map(row => `
           <tr class="border-t border-gray-100">
             <td class="py-2 pr-4 font-semibold text-gray-900">${escapeHtml(row.label)}</td>
             <td class="py-2 pr-4 text-gray-600">${escapeHtml(row.name)}</td>
@@ -148,13 +152,13 @@
           </tr>
         `).join("");
 
-        const billingPeriod = viewSummary.billing_period ? viewSummary.billing_period : 'Current';
+        const billingPeriod = datasets.viewSummary.billing_period ? datasets.viewSummary.billing_period : 'Current';
 
         wrapper.innerHTML = `
           <div class="flex flex-col gap-4 mb-6 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h3 class="font-semibold text-lg">Billing Summary (${escapeHtml(billingPeriod)})</h3>
-              <p class="text-sm text-gray-500">${billingSeries.length} building${billingSeries.length === 1 ? '' : 's'} with usage</p>
+              <p class="text-sm text-gray-500">${datasets.billingSeries.length} building${datasets.billingSeries.length === 1 ? '' : 's'} with usage</p>
             </div>
             <div class="grid grid-cols-2 gap-3 lg:grid-cols-3 metric-grid">
               ${billingMetrics}
@@ -182,12 +186,10 @@
         chartInstance = new Chart(ctx, {
           type: "bar",
           data: {
-            // labels: ["COE","CCS","CSM","CED","CBAA","CON"],
-            labels: billingSeries.map(item => item.label),
+            labels: datasets.billingSeries.map(item => item.label),
             datasets: [{
               label: "This Month's Bill (₱)",
-              // data: [12000,9500,8800,10200,9700,8000],
-              data: billingSeries.map(item => item.cost),
+              data: datasets.billingSeries.map(item => item.cost),
               backgroundColor: "#7a0e0e"
             }]
           },
@@ -197,26 +199,24 @@
           }
         });
       }
-
-      // === AGGREGATED LOAD MONITOR VIEW ===
       else if (type === "load") {
-        if (!loadSeries.length) {
+        if (!datasets.loadSeries.length) {
           handleEmptyState("No load profile available for the selected window.");
           return;
         }
 
-        const loadWindow = viewSummary.load_window || {};
+        const loadWindow = datasets.viewSummary.load_window || {};
         const windowEnd = loadWindow.end ? new Date(loadWindow.end).toLocaleString() : "n/a";
-        const topContributor = loadSeries.length ? loadSeries[0].label : 'n/a';
+        const topContributor = datasets.loadSeries.length ? datasets.loadSeries[0].label : 'n/a';
         const loadMetrics = [
           renderMetric(
             "Total kW",
-            numberFormatter.format(loadSeries.reduce((sum, row) => sum + row.total_kw, 0))
+            numberFormatter.format(datasets.loadSeries.reduce((sum, row) => sum + row.total_kw, 0))
           ),
           renderMetric("Top Contributor", topContributor),
-          renderMetric("Buildings", loadSeries.length)
+          renderMetric("Buildings", datasets.loadSeries.length)
         ].join("");
-        const loadRows = loadSeries.map(row => `
+        const loadRows = datasets.loadSeries.map(row => `
           <li class="flex items-center justify-between border border-gray-100 rounded p-3">
             <div>
               <p class="font-semibold text-gray-900">${escapeHtml(row.label)}</p>
@@ -225,7 +225,7 @@
             <span class="text-base font-semibold text-gray-900">${row.percentage}%</span>
           </li>
         `).join("");
-        const loadColors = loadSeries.map((_, index) => palette[index % palette.length]);
+        const loadColors = datasets.loadSeries.map((_, index) => palette[index % palette.length]);
 
         wrapper.innerHTML = `
           <div class="flex flex-col gap-4 mb-6 lg:flex-row lg:items-center lg:justify-between">
@@ -253,15 +253,10 @@
         chartInstance = new Chart(ctx, {
           type: "doughnut",
           data: {
-            // labels: ["COE","CCS","CSM","CED","CBAA","CON"],
-            labels: loadSeries.map(item => item.label),
+            labels: datasets.loadSeries.map(item => item.label),
             datasets: [{
               label: "Load Share (%)",
-              // data: [30,25,15,10,12,8],
-              data: loadSeries.map(item => item.percentage),
-              // backgroundColor: [
-              //   "#7a0e0e","#9d1b1b","#b34141","#d28c8c","#a35a5a","#6b3b3b"
-              // ]
+              data: datasets.loadSeries.map(item => item.percentage),
               backgroundColor: loadColors
             }]
           },
@@ -271,6 +266,7 @@
         });
       }
     }
+
     function handleEmptyState(message) {
       viewDisplay.innerHTML = `
         <div class="py-12 text-gray-500">
@@ -291,9 +287,57 @@
       div.textContent = value === undefined || value === null ? "" : value;
       return div.innerHTML;
     }
+
+    const applyDatasets = (payload) => {
+      if (!payload) {
+        return;
+      }
+
+      if (Array.isArray(payload.realtimeSeries)) {
+        datasets.realtimeSeries = payload.realtimeSeries;
+      }
+
+      if (Array.isArray(payload.billingSeries)) {
+        datasets.billingSeries = payload.billingSeries;
+      }
+
+      if (Array.isArray(payload.loadSeries)) {
+        datasets.loadSeries = payload.loadSeries;
+      }
+
+      if (payload.viewSummary) {
+        datasets.viewSummary = payload.viewSummary;
+      }
+    };
+
+    const refreshFromApi = async () => {
+      try {
+        const response = await fetch('/api/view', {
+          headers: { Accept: 'application/json' },
+        });
+
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+
+        const payload = await response.json();
+        window.viewBootstrap = payload;
+        applyDatasets(payload);
+        renderView(activeView);
+      } catch (error) {
+        console.error('Unable to refresh view datasets', error);
+      }
+    };
+
+    window.viewPage = window.viewPage || {};
+    window.viewPage.__datasets = datasets;
+    window.viewPage.renderActive = () => renderView(activeView);
+    window.viewPage.refresh = () => {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(refreshFromApi, 750);
+    };
   });
   </script>
-
   <style>
     .active-view {
       background-color: #7a0e0e !important;

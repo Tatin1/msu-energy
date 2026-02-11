@@ -142,7 +142,7 @@ export const mountDashboardRealtime = () => {
 
   if (window.Echo) {
     window.Echo.channel('dashboard.metrics')
-      .listen('ReadingIngested', ({ payload }) => renderDashboard(payload));
+      .listen('.ReadingIngested', ({ payload }) => renderDashboard(payload));
   }
 
   state.initialized = true;

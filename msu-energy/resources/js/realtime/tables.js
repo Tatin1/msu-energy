@@ -100,11 +100,11 @@ export const mountTablesRealtime = () => {
 
   if (transformerBody) {
     window.Echo.channel('transformers.overview')
-      .listen('TransformerLogRecorded', ({ payload }) => renderTransformerRows(transformerBody, payload ?? []));
+      .listen('.TransformerLogRecorded', ({ payload }) => renderTransformerRows(transformerBody, payload ?? []));
   }
 
   if (systemBody) {
     window.Echo.channel('system.logs')
-      .listen('SystemLogRecorded', ({ payload }) => renderSystemRows(systemBody, payload ?? []));
+      .listen('.SystemLogRecorded', ({ payload }) => renderSystemRows(systemBody, payload ?? []));
   }
 };

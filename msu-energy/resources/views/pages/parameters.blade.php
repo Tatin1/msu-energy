@@ -270,6 +270,11 @@
 
       refreshBtn.addEventListener('click', fetchParameters);
       fetchParameters();
+
+      window.parametersPage = window.parametersPage || {};
+      window.parametersPage.refresh = () => {
+        fetchParameters();
+      };
     });
   </script>
 </section>

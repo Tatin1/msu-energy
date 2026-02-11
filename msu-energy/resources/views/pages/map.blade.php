@@ -301,6 +301,17 @@
                   });
             };
 
+            const applyBuildingStatus = (buildings = []) => {
+                  if (!Array.isArray(buildings)) {
+                        return;
+                  }
+
+                  state.buildings = buildings;
+                  renderStatusList(state.buildings);
+                  const selected = getBuildingByCode(state.selectedCode) ?? state.buildings[0] ?? null;
+                  renderBuildingInfo(selected);
+            };
+
             const refreshBuildingStatus = async () => {
                   try {
                         const response = await fetch('/api/buildings', {
@@ -312,21 +323,20 @@
                         }
 
                         const payload = await response.json();
-                        if (Array.isArray(payload)) {
-                              state.buildings = payload;
-                              renderStatusList(state.buildings);
-                              const selected = getBuildingByCode(state.selectedCode) ?? state.buildings[0] ?? null;
-                              renderBuildingInfo(selected);
-                        }
+                        applyBuildingStatus(payload ?? []);
                   } catch (error) {
                         console.warn('Unable to refresh building status', error);
                   }
             };
 
-            renderStatusList(state.buildings);
-            renderBuildingInfo(getBuildingByCode(state.selectedCode) ?? state.buildings[0] ?? null);
+            applyBuildingStatus(state.buildings);
             refreshBuildingStatus();
             setInterval(refreshBuildingStatus, 60000);
+
+            window.mapPage = window.mapPage || {};
+            window.mapPage.applyBuildingStatus = (buildings) => {
+                  applyBuildingStatus(Array.isArray(buildings) ? buildings : []);
+            };
 
             const escapeSelector = (value) => {
                   if (window.CSS && typeof window.CSS.escape === 'function') {

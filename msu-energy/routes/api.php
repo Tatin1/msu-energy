@@ -14,6 +14,7 @@ Route::get('/buildings', [BuildingController::class,'index']);
 Route::get('/buildings/{code}/parameters', [ReadingController::class,'parameters']);
 Route::get('/meters/{id}/readings', [ReadingController::class,'meterReadings']);
 Route::get('/billing', [BillingController::class,'indexApi']);
+Route::get('/view', [DashboardController::class,'apiView']);
 Route::get('/meters/{id}/daily/{param}/{date?}', [GraphController::class,'daily']);
 Route::get('/history/building-logs', [HistoryController::class,'buildingLogs']);
 Route::get('/history/system-logs', [HistoryController::class,'systemLogs']);
