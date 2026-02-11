@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Billing;
 use App\Models\Building;
+use App\Models\BuildingLog;
 use App\Models\Reading;
 use App\Models\SystemLog;
 use App\Models\Tariff;
 use App\Models\TransformerLog;
+use App\Support\BillingSnapshot;
 use App\Support\BuildingStatusFormatter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -182,78 +183,25 @@ class DashboardController extends Controller
     public function billing()
     {
         // return view('pages.billing');
+        $snapshot = BillingSnapshot::build();
 
         $buildings = Building::query()
             ->select('id', 'code', 'name')
-            ->with(['billing:id,building_id,last_month_kwh,this_month_kwh,total_bill'])
             ->orderBy('code')
-            ->get();
-
-        $tariffRate = (float) (Tariff::query()->value('rate') ?? 0);
-
-        $summary = [
-            'this_month_kwh' => (float) Billing::query()->sum('this_month_kwh'),
-            'last_month_kwh' => (float) Billing::query()->sum('last_month_kwh'),
-            'avg_pf' => (float) (Reading::query()->whereNotNull('power_factor')->avg('power_factor') ?? 0),
-        ];
-        $summary['total_cost'] = round($summary['this_month_kwh'] * $tariffRate, 2);
-
-        $readingStats = Reading::query()
-            ->selectRaw('meters.building_id, AVG(readings.power_factor) as avg_pf')
-            ->join('meters', 'meters.id', '=', 'readings.meter_id')
-            ->groupBy('meters.building_id')
             ->get()
-            ->keyBy('building_id');
-
-        $buildingSeries = $buildings->map(function (Building $building) use ($tariffRate, $readingStats) {
-            $billing = $building->billing;
-            $avgPf = optional($readingStats->get($building->id))->avg_pf;
-
-            $thisMonth = (float) ($billing->this_month_kwh ?? 0);
-            $lastMonth = (float) ($billing->last_month_kwh ?? 0);
-            $cost = $billing && $billing->total_bill
-                ? (float) $billing->total_bill
-                : $thisMonth * $tariffRate;
-
-            return [
+            ->map(fn (Building $building) => [
                 'id' => $building->id,
                 'code' => $building->code,
                 'name' => $building->name,
-                'this_month_kwh' => round($thisMonth, 3),
-                'last_month_kwh' => round($lastMonth, 3),
-                'cost' => round($cost, 2),
-                'avg_pf' => $avgPf !== null ? round((float) $avgPf, 4) : null,
-            ];
-        });
-
-        $now = now();
-        $trendSeries = collect(range(6, 0))->map(function (int $offset) use ($now) {
-            $date = $now->copy()->subDays($offset)->startOfDay();
-            $end = $date->copy()->endOfDay();
-
-            $total = (float) Reading::query()
-                ->whereBetween('recorded_at', [$date, $end])
-                ->sum('kwh');
-
-            return [
-                'label' => $date->format('M d'),
-                'kwh' => round($total, 3),
-            ];
-        });
-
-        $chartConfig = [
-            'buildings' => $buildingSeries,
-            'trend' => $trendSeries,
-        ];
+            ]);
 
         return view('pages.billing', [
-            'summary' => $summary,
-            'buildings' => $buildings->map(fn (Building $building) => [
-                'id' => $building->id,
-                'code' => $building->code,
-                'name' => $building->name,
-            ]),
-            'chartConfig' => $chartConfig,
+            'summary' => $snapshot['summary'],
+            'buildings' => $buildings,
+            'chartConfig' => [
+                'buildings' => $snapshot['buildings'],
+                'trend' => $snapshot['trend'],
+            ],
         ]);
     }
     public function tables()
@@ -300,8 +248,9 @@ class DashboardController extends Controller
                 'name' => $building->name,
             ]);
 
-        $buildingLogs = TransformerLog::query()
-            ->orderByDesc('recorded_at')
+        $buildingLogs = BuildingLog::query()
+            ->orderByDesc('date')
+            ->orderByDesc('time')
             ->limit(50)
             ->get();
 
@@ -320,8 +269,18 @@ class DashboardController extends Controller
     public function options() { return view('pages.options'); }
     public function view()
     {
-        // return view('pages.view');
+        $datasets = $this->viewDatasets();
 
+        return view('pages.view', $datasets);
+    }
+    public function apiView()
+    {
+        return response()->json($this->viewDatasets());
+    }
+    public function help() { return view('pages.help'); }
+    public function about() { return view('pages.about'); }
+    private function viewDatasets(): array
+    {
         $now = now();
         $timezone = config('app.timezone', 'UTC');
 
@@ -421,15 +380,13 @@ class DashboardController extends Controller
             ],
         ];
 
-        return view('pages.view', [
+        return [
             'realtimeSeries' => $realtimeSeries,
             'billingSeries' => $billingSeries,
             'loadSeries' => $loadSeries,
             'viewSummary' => $viewSummary,
-        ]);
+        ];
     }
-    public function help() { return view('pages.help'); }
-    public function about() { return view('pages.about'); }
     private function buildingEnergyTotals(Carbon $start, Carbon $end): Collection
     {
         return Reading::query()

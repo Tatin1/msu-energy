@@ -121,21 +121,35 @@
       let energyChart = null;
       let previousChart = null;
       let trendChart = null;
+      let refreshTimer = null;
 
-      const buildingDataset = config.buildings.reduce((carry, item) => {
-        carry[String(item.id)] = item;
-        return carry;
-      }, {});
+      const state = {
+        summary,
+        buildings: config.buildings ?? [],
+        trend: config.trend ?? [],
+      };
+
+      const buildBuildingDataset = (buildings = []) => {
+        return (buildings ?? []).reduce((carry, item) => {
+          carry[String(item.id)] = item;
+          return carry;
+        }, {});
+      };
+
+      let buildingDataset = buildBuildingDataset(state.buildings);
 
       const formatNumber = (value, options = {}) => {
         return new Intl.NumberFormat('en-PH', options).format(value ?? 0);
       };
 
       function updateKpis(payload = null) {
-        const thisMonth = payload ? payload.this_month_kwh : summary.this_month_kwh;
-        const lastMonth = payload ? payload.last_month_kwh : summary.last_month_kwh;
-        const cost = payload ? payload.cost : summary.total_cost;
-        const avgPf = payload && payload.avg_pf !== null ? payload.avg_pf : (summary.avg_pf ?? null);
+        const source = payload ?? state.summary;
+        const thisMonth = source?.this_month_kwh ?? 0;
+        const lastMonth = source?.last_month_kwh ?? 0;
+        const cost = source?.cost ?? source?.total_cost ?? 0;
+        const avgPf = payload && payload.avg_pf !== null
+          ? payload.avg_pf
+          : (state.summary?.avg_pf ?? null);
 
         document.getElementById('thisMonthkW').textContent = `${formatNumber(thisMonth, { maximumFractionDigits: 0 })} kWh`;
         document.getElementById('previousMonthkW').textContent = `${formatNumber(lastMonth, { maximumFractionDigits: 0 })} kWh`;
@@ -146,8 +160,8 @@
       }
 
       function renderTrendChart() {
-        const labels = config.trend.map(point => point.label);
-        const values = config.trend.map(point => point.kwh);
+        const labels = state.trend.map(point => point.label);
+        const values = state.trend.map(point => point.kwh);
 
         if (trendChart) trendChart.destroy();
 
@@ -175,8 +189,9 @@
 
       function renderBuildingCharts(payload = null) {
         const label = payload ? `${payload.code} – ${payload.name}` : 'All Buildings';
-        const thisMonth = payload ? payload.this_month_kwh : summary.this_month_kwh;
-        const lastMonth = payload ? payload.last_month_kwh : summary.last_month_kwh;
+        const fallbackSummary = state.summary ?? {};
+        const thisMonth = payload ? payload.this_month_kwh : fallbackSummary.this_month_kwh;
+        const lastMonth = payload ? payload.last_month_kwh : fallbackSummary.last_month_kwh;
 
         if (energyChart) energyChart.destroy();
         if (previousChart) previousChart.destroy();
@@ -254,6 +269,67 @@
       renderBuildingCharts();
       renderTrendChart();
       updateStatus();
+
+      const applySnapshot = (snapshot) => {
+        if (!snapshot) {
+          return;
+        }
+
+        if (snapshot.summary) {
+          state.summary = snapshot.summary;
+        }
+
+        if (snapshot.buildings) {
+          state.buildings = snapshot.buildings;
+          buildingDataset = buildBuildingDataset(state.buildings);
+        }
+
+        if (snapshot.trend) {
+          state.trend = snapshot.trend;
+        }
+
+        updateKpis();
+        renderBuildingCharts();
+        renderTrendChart();
+        updateStatus();
+      };
+
+      const refreshFromApi = async () => {
+        try {
+          if (statusElement) {
+            statusElement.textContent = 'Refreshing live data…';
+          }
+
+          const response = await fetch('/api/billing', {
+            headers: { Accept: 'application/json' },
+          });
+
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+
+          const payload = await response.json();
+          applySnapshot(payload);
+          if (statusElement) {
+            statusElement.textContent = 'Live billing snapshot updated.';
+          }
+        } catch (error) {
+          console.error(error);
+          if (statusElement) {
+            statusElement.textContent = 'Live refresh failed. Showing cached data.';
+          }
+        }
+      };
+
+      const queueRefresh = () => {
+        clearTimeout(refreshTimer);
+        refreshTimer = setTimeout(refreshFromApi, 750);
+      };
+
+      window.billingPage = window.billingPage || {};
+      window.billingPage.refresh = () => {
+        queueRefresh();
+      };
     });
   </script>
 

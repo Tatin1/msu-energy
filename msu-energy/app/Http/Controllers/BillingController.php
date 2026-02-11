@@ -2,21 +2,31 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Support\BillingSnapshot;
 
 class BillingController extends Controller
 {
-    public function indexApi() {
-    $rate = \App\Models\Tariff::latest()->value('rate') ?? 12.00;
-    $bills = \App\Models\Building::with('billing')->get()->map(function($b) use($rate){
-        $last = $b->billing->last_month_kwh ?? 0;
-        $thism = $b->billing->this_month_kwh ?? 0;
-        return [
-            'id'=>$b->id,'code'=>$b->code,'name'=>$b->name,
-            'lastMonth'=>$last,'thisMonth'=>$thism,'bill'=>($thism * $rate)
-        ];
-    });
-    return response()->json(['rate'=>$rate,'bills'=>$bills]);
-}
+    public function indexApi()
+    {
+        $snapshot = BillingSnapshot::build();
 
+        $legacyBills = collect($snapshot['buildings'] ?? [])->map(function (array $building) {
+            return [
+                'id' => $building['id'],
+                'code' => $building['code'],
+                'name' => $building['name'],
+                'lastMonth' => $building['last_month_kwh'] ?? 0,
+                'thisMonth' => $building['this_month_kwh'] ?? 0,
+                'bill' => $building['cost'] ?? 0,
+            ];
+        })->values();
+
+        return response()->json([
+            'rate' => $snapshot['rate'],
+            'summary' => $snapshot['summary'],
+            'buildings' => $snapshot['buildings'],
+            'trend' => $snapshot['trend'],
+            'bills' => $legacyBills,
+        ]);
+    }
 }

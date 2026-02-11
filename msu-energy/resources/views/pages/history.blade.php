@@ -64,15 +64,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- Dummy Data --}}
                     @forelse(($historyBuildingLogs ?? collect()) as $log)
-                        <tr class="hover:bg-gray-50" data-building="{{ $log->building ?? $log->id }}" data-date="{{ optional($log->recorded_at)->toDateString() ?? '—' }}">
+                        <tr class="hover:bg-gray-50" data-building="{{ $log->building ?? $log->id }}" data-date="{{ optional($log->date)->toDateString() ?? '—' }}">
                             <td class="border px-3 py-2">{{ $log->id }}</td>
                             <td class="border px-3 py-2">{{ $log->building ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->toDateString() ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->format('H:i') ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->copy()->addMinutes(15)->format('H:i') ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->frequency ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->date ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->time ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->time_ed ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->f ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->v1 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->v2 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->v3 ?? '—' }}</td>
@@ -135,7 +134,6 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{-- Dummy Data --}}
                     @forelse(($historySystemLogs ?? collect()) as $log)
                         <tr class="hover:bg-gray-50" data-building="{{ $log->building ?? 'SYSTEM' }}" data-date="{{ $log->date ?? '—' }}">
                             <td class="border px-3 py-2">{{ $log->id }}</td>
@@ -219,7 +217,6 @@
         systemBuildingSelect.addEventListener('change', filterSystemTable);
         systemDateInput.addEventListener('change', filterSystemTable);
         filterSystemTable();
-        */
     </script>
     <script>
         const historyConfig = {
@@ -232,13 +229,13 @@
             perPage: 50,
         };
 
-        const buildingSelect = document.getElementById('building-select');
-        const buildingDateInput = document.getElementById('building-date');
+        // const buildingSelect = document.getElementById('building-select');
+        // const buildingDateInput = document.getElementById('building-date');
         const buildingTableBody = document.querySelector('#building-table tbody');
         const exportBuildingBtn = document.getElementById('exportBuildingBtn');
 
-        const systemBuildingSelect = document.getElementById('system-building-select');
-        const systemDateInput = document.getElementById('system-date');
+        // const systemBuildingSelect = document.getElementById('system-building-select');
+        // const systemDateInput = document.getElementById('system-date');
         const systemTableBody = document.querySelector('#system-table tbody');
         const exportSystemBtn = document.getElementById('exportSystemBtn');
 

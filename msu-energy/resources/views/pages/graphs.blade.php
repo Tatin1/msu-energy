@@ -228,6 +228,11 @@
 
     populateMeters();
     fetchDataset();
+
+    window.graphsPage = window.graphsPage || {};
+    window.graphsPage.refresh = () => {
+      fetchDataset();
+    };
   });
   </script>
 </section>
