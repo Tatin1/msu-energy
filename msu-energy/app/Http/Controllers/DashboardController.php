@@ -298,6 +298,10 @@ class DashboardController extends Controller
                 return null;
             }
 
+            if (is_string($reading->recorded_at)) {
+                $reading->recorded_at = \Carbon\Carbon::parse($reading->recorded_at);
+            }
+
             return $reading->recorded_at
                 ->copy()
                 ->timezone($timezone)

@@ -41,7 +41,21 @@ class GraphController extends Controller
             ->get(['recorded_at', $column]);
 
         $response = [
-            'labels' => $readings->map(fn ($row) => optional($row->recorded_at)->timezone(config('app.timezone'))->format('H:i'))->toArray(),
+            'labels' => $readings->map(function ($row) {
+                $timestamp = null;
+
+                if ($row->recorded_at instanceof Carbon) {
+                    $timestamp = $row->recorded_at->copy();
+                } elseif (! empty($row->recorded_at)) {
+                    $timestamp = Carbon::parse($row->recorded_at, config('app.timezone'));
+                }
+
+                if (! $timestamp) {
+                    return null;
+                }
+
+                return $timestamp->timezone(config('app.timezone'))->format('H:i');
+            })->toArray(),
             'values' => $readings->map(fn ($row) => $row->{$column} !== null ? (float) $row->{$column} : null)->toArray(),
             'parameterLabel' => $label,
             'meter' => [

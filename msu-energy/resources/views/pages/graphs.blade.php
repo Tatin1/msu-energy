@@ -92,6 +92,8 @@
     const config = @json($graphConfig);
     const palette = ["#7a0e0e", "#f28c38", "#1f6feb", "#0f915a"];
 
+    let chart = null;
+    /*
     const chart = new Chart(ctx, {
       type: "line",
       data: {
@@ -116,6 +118,8 @@
         },
       },
     });
+    */
+    const chartCtx = ctx?.getContext ? ctx.getContext('2d') : null;
 
     const state = {
       building: buildingSelect.value,
@@ -123,6 +127,21 @@
       parameter: paramSelect.value,
       date: dateInput.value,
     };
+
+    const findBuilding = (id) => config.buildings.find((item) => String(item.id) === String(id));
+
+    function ensureBuildingSelection() {
+      const current = findBuilding(state.building);
+      if (current && Array.isArray(current.meters) && current.meters.length) {
+        return;
+      }
+
+      const fallback = config.buildings.find((item) => Array.isArray(item.meters) && item.meters.length);
+      if (fallback) {
+        state.building = fallback.id;
+        buildingSelect.value = fallback.id;
+      }
+    }
 
     function updateStatus(message, tone = 'default') {
       const tones = {
@@ -136,7 +155,9 @@
     }
 
     function populateMeters() {
-      const building = config.buildings.find((item) => String(item.id) === String(state.building));
+      ensureBuildingSelection();
+      // const building = config.buildings.find((item) => String(item.id) === String(state.building));
+      const building = findBuilding(state.building);
       meterSelect.innerHTML = '';
 
       if (!building || building.meters.length === 0) {
@@ -184,10 +205,43 @@
         const labels = payload.labels ?? [];
         const values = payload.values ?? [];
 
-        chart.data.labels = labels;
-        chart.data.datasets[0].data = values;
-        chart.data.datasets[0].label = payload.parameterLabel || 'Parameter Trend';
-        chart.update();
+        if (!chart && chartCtx) {
+          chart = new Chart(chartCtx, {
+            type: 'line',
+            data: {
+              labels,
+              datasets: [{
+                label: payload.parameterLabel || 'Parameter Trend',
+                data: values,
+                borderColor: palette[0],
+                backgroundColor: `${palette[0]}33`,
+                fill: true,
+                tension: 0.35,
+                pointRadius: 3,
+              }],
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: { beginAtZero: true },
+              },
+              plugins: {
+                legend: { display: false },
+              },
+            },
+          });
+        } else if (chart) {
+          /*
+          chart.data.labels = labels;
+          chart.data.datasets[0].data = values;
+          chart.data.datasets[0].label = payload.parameterLabel || 'Parameter Trend';
+          chart.update();
+          */
+          chart.data.labels = labels;
+          chart.data.datasets[0].data = values;
+          chart.data.datasets[0].label = payload.parameterLabel || 'Parameter Trend';
+          chart.update('none');
+        }
 
         if (!values.length) {
           updateStatus('No readings for the selected date', 'warn');
@@ -226,6 +280,7 @@
     dateInput.addEventListener('change', handleDateChange);
     enterBtn.addEventListener('click', fetchDataset);
 
+    ensureBuildingSelection();
     populateMeters();
     fetchDataset();
 

@@ -20,7 +20,8 @@ class ReadingFactory extends Factory
             return [];
         }
 
-        $recordedAt = fake()->dateTimeBetween('-2 days', 'now');
+        // $recordedAt = fake()->dateTimeBetween('-2 days', 'now');
+        $recordedAt = now()->startOfDay()->addHours(fake()->numberBetween(0, 23))->addMinutes(fake()->numberBetween(0, 59));
 
         return [
             'meter_id' => $meter_id,
