@@ -11,6 +11,8 @@ class BuildingStatusFormatter
 {
     public static function summaries(int $onlineThresholdMinutes = 15, int $idleThresholdMinutes = 60): Collection
     {
+        $timezone = config('app.timezone', 'UTC');
+
         $buildings = Building::query()
             ->select('id', 'code', 'name', 'is_online')
             ->orderBy('code')
@@ -23,10 +25,14 @@ class BuildingStatusFormatter
             ->get()
             ->keyBy('building_id');
 
-        return $buildings->map(function (Building $building) use ($recency, $onlineThresholdMinutes, $idleThresholdMinutes) {
+        return $buildings->map(function (Building $building) use ($recency, $onlineThresholdMinutes, $idleThresholdMinutes, $timezone) {
             $latest = optional($recency->get($building->id))->latest_recorded_at;
-            $latestAt = $latest ? Carbon::parse($latest) : null;
-            $status = self::determineStatus($building, $latestAt, $onlineThresholdMinutes, $idleThresholdMinutes);
+            // $latestAt = $latest ? Carbon::parse($latest) : null;
+            $latestAt = $latest
+                ? Carbon::parse($latest)->timezone($timezone)
+                : null;
+            // $status = self::determineStatus($building, $latestAt, $onlineThresholdMinutes, $idleThresholdMinutes);
+            $status = self::determineStatus($building, $latestAt, $onlineThresholdMinutes, $idleThresholdMinutes, $timezone);
 
             return [
                 'id' => $building->id,
@@ -40,7 +46,8 @@ class BuildingStatusFormatter
         })->values();
     }
 
-    protected static function determineStatus(Building $building, ?Carbon $latestAt, int $onlineThresholdMinutes, int $idleThresholdMinutes): array
+    // protected static function determineStatus(Building $building, ?Carbon $latestAt, int $onlineThresholdMinutes, int $idleThresholdMinutes): array
+    protected static function determineStatus(Building $building, ?Carbon $latestAt, int $onlineThresholdMinutes, int $idleThresholdMinutes, string $timezone): array
     {
         if (! $building->is_online) {
             return [
@@ -56,25 +63,30 @@ class BuildingStatusFormatter
             ];
         }
 
-        $minutes = $latestAt->diffInMinutes(now());
+        $referenceNow = now($timezone);
+        // $minutes = $latestAt->diffInMinutes(now());
+        $minutes = $latestAt->diffInMinutes($referenceNow);
 
         if ($minutes <= $onlineThresholdMinutes) {
             return [
                 'label' => 'online',
-                'description' => 'Telemetry received '.$latestAt->diffForHumans(null, true).' ago',
+                // 'description' => 'Telemetry received '.$latestAt->diffForHumans(null, true).' ago',
+                'description' => 'Telemetry received '.$latestAt->diffForHumans($referenceNow, true).' ago',
             ];
         }
 
         if ($minutes <= $idleThresholdMinutes) {
             return [
                 'label' => 'idle',
-                'description' => 'Last update '.$latestAt->diffForHumans(null, true).' ago',
+                // 'description' => 'Last update '.$latestAt->diffForHumans(null, true).' ago',
+                'description' => 'Last update '.$latestAt->diffForHumans($referenceNow, true).' ago',
             ];
         }
 
         return [
             'label' => 'offline',
-            'description' => 'No updates for '.$latestAt->diffForHumans(null, true),
+            // 'description' => 'No updates for '.$latestAt->diffForHumans(null, true),
+            'description' => 'No updates for '.$latestAt->diffForHumans($referenceNow, true),
         ];
     }
 }
