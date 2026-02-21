@@ -19,28 +19,27 @@ const renderTransformerRows = (tbody, rows = []) => {
   }
 
   if (!rows.length) {
-    setEmptyRow(tbody, 'No transformer logs available yet.', 6);
+    setEmptyRow(tbody, 'No transformer logs available yet.', 12);
     return;
   }
 
   tbody.innerHTML = rows.map((row, index) => {
-    const status = row.status ?? 'Unknown';
-    const badgeClass = STATUS_BADGES[status] ?? STATUS_BADGES.Unknown;
-    const voltage = row.voltage !== null && row.voltage !== undefined
-      ? Number(row.voltage).toFixed(2)
-      : '—';
-    const loadKw = row.load_kw !== null && row.load_kw !== undefined
-      ? Number(row.load_kw).toFixed(3)
-      : '—';
+    const format = (value, digits = 2) => (value !== null && value !== undefined ? Number(value).toFixed(digits) : '—');
 
     return `
       <tr class="hover:bg-gray-100">
         <td class="px-4 py-2 font-medium">${index + 1}</td>
-        <td class="px-4 py-2">${row.label ?? '—'}</td>
-        <td class="px-4 py-2">${voltage}</td>
-        <td class="px-4 py-2">${loadKw}</td>
-        <td class="px-4 py-2"><span class="px-2 py-1 rounded-full text-xs font-semibold ${badgeClass}">${status}</span></td>
-        <td class="px-4 py-2 text-gray-600">${row.timestamp ?? '—'}</td>
+        <td class="px-4 py-2">${row.id ?? '—'}</td>
+        <td class="px-4 py-2">${row.recorded_at ?? '—'}</td>
+        <td class="px-4 py-2">${format(row.frequency, 2)}</td>
+        <td class="px-4 py-2">${format(row.v1, 2)}</td>
+        <td class="px-4 py-2">${format(row.v2, 2)}</td>
+        <td class="px-4 py-2">${format(row.v3, 2)}</td>
+        <td class="px-4 py-2">${format(row.a1, 2)}</td>
+        <td class="px-4 py-2">${format(row.a2, 2)}</td>
+        <td class="px-4 py-2">${format(row.a3, 2)}</td>
+        <td class="px-4 py-2">${format(row.pf, 3)}</td>
+        <td class="px-4 py-2">${format(row.kwh, 3)}</td>
       </tr>
     `;
   }).join('');

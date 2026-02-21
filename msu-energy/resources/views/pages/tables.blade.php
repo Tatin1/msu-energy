@@ -5,7 +5,7 @@
   <h1 class="text-3xl font-bold text-maroon mb-6">System Tables</h1>
   
 
-  {{-- Transformer Log Table --}}
+  {{-- Legacy transformer summary table
   <div class="card relative">
 
     <!-- Title + Export Button on the same level -->
@@ -31,11 +31,6 @@
           </tr>
         </thead>
         <tbody class="divide-y">
-          {{-- @foreach ([
-            ['T1', '230', '50.2', 'Normal', '2025-10-31 10:15 AM'],
-            ['T2', '228', '48.5', 'Warning', '2025-10-31 10:17 AM'],
-            ['T3', '231', '52.0', 'Normal', '2025-10-31 10:20 AM'],
-          ] as $index => $row) --}}
           @forelse(($transformerRows ?? collect()) as $index => $row)
           @php
             $status = $row['status'] ?? 'Unknown';
@@ -47,14 +42,6 @@
             ];
             $statusClass = $statusColors[$status] ?? 'bg-gray-200 text-gray-700';
           @endphp
-          {{-- <tr class="hover:bg-gray-100">
-            <td class="px-4 py-2 font-medium">{{ $index + 1 }}</td>
-            <td class="px-4 py-2">{{ $row[0] }}</td>
-            <td class="px-4 py-2">{{ $row[1] }}</td>
-            <td class="px-4 py-2">{{ $row[2] }}</td>
-            <td class="px-4 py-2">{{ $row[3] }}</td>
-            <td class="px-4 py-2 text-gray-600">{{ $row[4] }}</td>
-          </tr> --}}
           <tr class="hover:bg-gray-100">
             <td class="px-4 py-2 font-medium">{{ $index + 1 }}</td>
             <td class="px-4 py-2">{{ $row['label'] }}</td>
@@ -68,6 +55,62 @@
           @empty
           <tr>
             <td colspan="6" class="px-4 py-4 text-center text-gray-500">No transformer logs available yet.</td>
+          </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+  --}}
+
+  {{-- Transformer Log Table (raw schema fields) --}}
+  <div class="card relative">
+    <div class="flex items-center justify-between mb-3">
+        <h2 class="text-xl font-semibold text-maroon">Transformer Log</h2>
+
+        <button onclick="exportTableToCSV('transformer-log.csv', 'transformerTable')"
+            class="bg-maroon text-white px-3 py-1 rounded-lg text-sm hover:bg-maroon-700">
+            Export CSV
+        </button>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table id="transformerTable" class="min-w-full border border-gray-300 rounded-xl text-sm">
+        <thead class="bg-maroon text-white">
+          <tr>
+            <th class="px-4 py-2 text-left">#</th>
+            <th class="px-4 py-2 text-left">Log ID</th>
+            <th class="px-4 py-2 text-left">Recorded At</th>
+            <th class="px-4 py-2 text-left">Frequency (Hz)</th>
+            <th class="px-4 py-2 text-left">V1 (V)</th>
+            <th class="px-4 py-2 text-left">V2 (V)</th>
+            <th class="px-4 py-2 text-left">V3 (V)</th>
+            <th class="px-4 py-2 text-left">A1 (A)</th>
+            <th class="px-4 py-2 text-left">A2 (A)</th>
+            <th class="px-4 py-2 text-left">A3 (A)</th>
+            <th class="px-4 py-2 text-left">PF</th>
+            <th class="px-4 py-2 text-left">kWh</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y">
+          @forelse(($transformerRows ?? collect()) as $index => $row)
+          <tr class="hover:bg-gray-100">
+            <td class="px-4 py-2 font-medium">{{ $index + 1 }}</td>
+            <td class="px-4 py-2">{{ $row['id'] ?? '—' }}</td>
+            <td class="px-4 py-2">{{ $row['recorded_at'] ?? '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['frequency']) ? number_format($row['frequency'], 2) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['v1']) ? number_format($row['v1'], 2) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['v2']) ? number_format($row['v2'], 2) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['v3']) ? number_format($row['v3'], 2) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['a1']) ? number_format($row['a1'], 2) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['a2']) ? number_format($row['a2'], 2) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['a3']) ? number_format($row['a3'], 2) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['pf']) ? number_format($row['pf'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['kwh']) ? number_format($row['kwh'], 3) : '—' }}</td>
+          </tr>
+          @empty
+          <tr>
+            <td colspan="12" class="px-4 py-4 text-center text-gray-500">No transformer logs available yet.</td>
           </tr>
           @endforelse
         </tbody>

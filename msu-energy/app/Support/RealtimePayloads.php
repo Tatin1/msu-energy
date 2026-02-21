@@ -132,6 +132,7 @@ class RealtimePayloads
     {
         $timezone = config('app.timezone');
 
+        /*
         return TransformerLog::query()
             ->orderByDesc('recorded_at')
             ->limit(15)
@@ -148,6 +149,29 @@ class RealtimePayloads
                     'timestamp' => $log->recorded_at
                         ? $log->recorded_at->timezone($timezone)->format('Y-m-d H:i')
                         : null,
+                ];
+            });
+        */
+
+        return TransformerLog::query()
+            ->orderByDesc('recorded_at')
+            ->limit(15)
+            ->get()
+            ->map(function (TransformerLog $log) use ($timezone) {
+                return [
+                    'id' => $log->id,
+                    'recorded_at' => $log->recorded_at
+                        ? $log->recorded_at->timezone($timezone)->format('Y-m-d H:i:s')
+                        : null,
+                    'frequency' => $log->frequency,
+                    'v1' => $log->v1,
+                    'v2' => $log->v2,
+                    'v3' => $log->v3,
+                    'a1' => $log->a1,
+                    'a2' => $log->a2,
+                    'a3' => $log->a3,
+                    'pf' => $log->pf,
+                    'kwh' => $log->kwh,
                 ];
             });
     }
