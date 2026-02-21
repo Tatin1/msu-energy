@@ -138,6 +138,57 @@
 
       let buildingDataset = buildBuildingDataset(state.buildings);
 
+      const getSelectedRange = () => ({
+        start: startInput.value,
+        end: endInput.value,
+      });
+
+      const findBuildingPayload = (id) => {
+        if (!id) return null;
+        return buildingDataset[id] ?? null;
+      };
+
+      async function fetchSnapshot(buildingId = null, selectedRange = null) {
+        const params = new URLSearchParams();
+        if (buildingId) params.append('building_id', buildingId);
+        if (selectedRange?.start) params.append('start', selectedRange.start);
+        if (selectedRange?.end) params.append('end', selectedRange.end);
+
+        try {
+          if (statusElement) {
+            statusElement.textContent = 'Refreshing live data…';
+          }
+
+          const response = await fetch(`/api/billing?${params.toString()}`, {
+            headers: { Accept: 'application/json' },
+          });
+
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+
+          const payload = await response.json();
+          applySnapshot(payload);
+
+          const active = findBuildingPayload(buildingId);
+          const range = selectedRange ?? getSelectedRange();
+
+          updateKpis(active ?? null);
+          renderBuildingCharts(active ?? null);
+          renderTrendChart();
+          updateStatus(active ?? null, range);
+
+          if (statusElement) {
+            statusElement.textContent = 'Live billing snapshot updated.';
+          }
+        } catch (error) {
+          console.error(error);
+          if (statusElement) {
+            statusElement.textContent = 'Live refresh failed. Showing cached data.';
+          }
+        }
+      }
+
       const formatNumber = (value, options = {}) => {
         return new Intl.NumberFormat('en-PH', options).format(value ?? 0);
       };
@@ -250,17 +301,9 @@
       }
 
       function handleGenerate() {
-        const buildingId = buildingSelect.value;
-        const payload = buildingDataset[buildingId] ?? null;
-
-        const selectedRange = {
-          start: startInput.value,
-          end: endInput.value,
-        };
-
-        updateKpis(payload);
-        renderBuildingCharts(payload);
-        updateStatus(payload, selectedRange);
+        const buildingId = buildingSelect.value || null;
+        const selectedRange = getSelectedRange();
+        fetchSnapshot(buildingId, selectedRange);
       }
 
       generateBtn.addEventListener('click', handleGenerate);
@@ -295,30 +338,9 @@
       };
 
       const refreshFromApi = async () => {
-        try {
-          if (statusElement) {
-            statusElement.textContent = 'Refreshing live data…';
-          }
-
-          const response = await fetch('/api/billing', {
-            headers: { Accept: 'application/json' },
-          });
-
-          if (!response.ok) {
-            throw new Error(await response.text());
-          }
-
-          const payload = await response.json();
-          applySnapshot(payload);
-          if (statusElement) {
-            statusElement.textContent = 'Live billing snapshot updated.';
-          }
-        } catch (error) {
-          console.error(error);
-          if (statusElement) {
-            statusElement.textContent = 'Live refresh failed. Showing cached data.';
-          }
-        }
+        const buildingId = buildingSelect.value || null;
+        const selectedRange = getSelectedRange();
+        await fetchSnapshot(buildingId, selectedRange);
       };
 
       const queueRefresh = () => {

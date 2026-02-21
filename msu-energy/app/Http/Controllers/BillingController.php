@@ -3,12 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Support\BillingSnapshot;
+use Illuminate\Http\Request;
 
 class BillingController extends Controller
 {
-    public function indexApi()
+    public function indexApi(Request $request)
     {
-        $snapshot = BillingSnapshot::build();
+        $buildingId = $request->integer('building_id');
+        $start = $request->query('start');
+        $end = $request->query('end');
+
+        $snapshot = BillingSnapshot::build($buildingId ?: null, $start, $end);
 
         $legacyBills = collect($snapshot['buildings'] ?? [])->map(function (array $building) {
             return [
