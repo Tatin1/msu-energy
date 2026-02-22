@@ -70,10 +70,14 @@
         <input type="date" id="billingEnd" class="input w-full" value="{{ $defaultEnd }}">
       </div>
 
-      <div class="flex items-end">
+      <div class="flex items-end gap-2">
         <button id="btnBilling"
           class="btn bg-maroon text-white w-full py-2 hover:bg-maroon-700 font-bold rounded-xl">
           Generate
+        </button>
+        <button id="btnBillingSave"
+          class="btn bg-gray-800 text-white w-full py-2 hover:bg-gray-900 font-bold rounded-xl">
+          Save Snapshot
         </button>
       </div>
     </div>
@@ -112,6 +116,7 @@
       const startInput = document.getElementById('billingStart');
       const endInput = document.getElementById('billingEnd');
       const generateBtn = document.getElementById('btnBilling');
+      const saveBtn = document.getElementById('btnBillingSave');
       const statusElement = document.getElementById('billingStatus');
 
       const ctxEnergy = document.getElementById('billingEnergyChart').getContext('2d');
@@ -306,7 +311,44 @@
         fetchSnapshot(buildingId, selectedRange);
       }
 
+      async function handleSave() {
+        const buildingId = buildingSelect.value || null;
+        const selectedRange = getSelectedRange();
+        const params = new URLSearchParams();
+        if (buildingId) params.append('building_id', buildingId);
+        if (selectedRange?.start) params.append('start', selectedRange.start);
+        if (selectedRange?.end) params.append('end', selectedRange.end);
+
+        try {
+          if (statusElement) {
+            statusElement.textContent = 'Saving snapshot…';
+          }
+
+          const response = await fetch(`/api/billing/save?${params.toString()}`, {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+          });
+
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+
+          const payload = await response.json();
+          if (statusElement) {
+            statusElement.textContent = 'Snapshot saved to billing records.';
+          }
+
+          await fetchSnapshot(buildingId, selectedRange);
+        } catch (error) {
+          console.error(error);
+          if (statusElement) {
+            statusElement.textContent = 'Save failed.';
+          }
+        }
+      }
+
       generateBtn.addEventListener('click', handleGenerate);
+      saveBtn.addEventListener('click', handleSave);
 
       updateKpis();
       renderBuildingCharts();
