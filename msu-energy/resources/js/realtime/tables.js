@@ -29,7 +29,6 @@ const renderTransformerRows = (tbody, rows = []) => {
     return `
       <tr class="hover:bg-gray-100">
         <td class="px-4 py-2 font-medium">${index + 1}</td>
-        <td class="px-4 py-2">${row.id ?? '—'}</td>
         <td class="px-4 py-2">${row.recorded_at ?? '—'}</td>
         <td class="px-4 py-2">${format(row.frequency, 2)}</td>
         <td class="px-4 py-2">${format(row.v1, 2)}</td>
@@ -57,11 +56,24 @@ const renderSystemRows = (tbody, rows = []) => {
 
   tbody.innerHTML = rows.map((row, index) => {
     const pf = row.total_pf;
+    // let pfClass = STATUS_BADGES.Unknown;
+    // if (typeof pf === 'number') {
+    //   if (pf < 0.8) {
+    //     pfClass = STATUS_BADGES.Critical;
+    //   } else if (pf < 0.9) {
+    //     pfClass = STATUS_BADGES.Warning;
+    //   } else {
+    //     pfClass = STATUS_BADGES.Normal;
+    //   }
+    // }
+
+    const pfValue = Number(pf);
+    const hasNumericPf = Number.isFinite(pfValue);
     let pfClass = STATUS_BADGES.Unknown;
-    if (typeof pf === 'number') {
-      if (pf < 0.8) {
+    if (hasNumericPf) {
+      if (pfValue < 0.8) {
         pfClass = STATUS_BADGES.Critical;
-      } else if (pf < 0.9) {
+      } else if (pfValue < 0.9) {
         pfClass = STATUS_BADGES.Warning;
       } else {
         pfClass = STATUS_BADGES.Normal;
@@ -79,7 +91,7 @@ const renderSystemRows = (tbody, rows = []) => {
         <td class="px-4 py-2">${format(row.total_kw)}</td>
         <td class="px-4 py-2">${format(row.total_kvar)}</td>
         <td class="px-4 py-2">${format(row.total_kva)}</td>
-        <td class="px-4 py-2"><span class="px-2 py-1 rounded-full text-xs font-semibold ${pfClass}">${pf !== null && pf !== undefined ? Number(pf).toFixed(3) : '—'}</span></td>
+        <td class="px-4 py-2"><span class="px-2 py-1 rounded-full text-xs font-semibold ${pfClass}">${hasNumericPf ? pfValue.toFixed(3) : '—'}</span></td>
       </tr>
     `;
   }).join('');

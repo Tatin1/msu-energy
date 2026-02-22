@@ -45,7 +45,7 @@
 
   {{-- Navbar --}}
   @auth
-  <nav id="navbar" class="sticky top-0 bg-gray-100 border-b border-gray-300 flex flex-wrap gap-1 px-4 py-2">
+  <nav id="navbar" class="sticky z-40 top-0 bg-gray-100 border-b border-gray-300 flex flex-wrap gap-1 px-4 py-2">
     @php
       $tabs = [
         'Home' => 'home',
