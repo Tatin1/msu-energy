@@ -79,7 +79,7 @@
         <thead class="bg-maroon text-white">
           <tr>
             <th class="px-4 py-2 text-left">#</th>
-            <th class="px-4 py-2 text-left">Log ID</th>
+            {{-- <th class="px-4 py-2 text-left">Log ID</th> --}}
             <th class="px-4 py-2 text-left">Recorded At</th>
             <th class="px-4 py-2 text-left">Frequency (Hz)</th>
             <th class="px-4 py-2 text-left">V1 (V)</th>
@@ -96,7 +96,7 @@
           @forelse(($transformerRows ?? collect()) as $index => $row)
           <tr class="hover:bg-gray-100">
             <td class="px-4 py-2 font-medium">{{ $index + 1 }}</td>
-            <td class="px-4 py-2">{{ $row['id'] ?? '—' }}</td>
+            {{-- <td class="px-4 py-2">{{ $row['id'] ?? '—' }}</td> --}}
             <td class="px-4 py-2">{{ $row['recorded_at'] ?? '—' }}</td>
             <td class="px-4 py-2">{{ isset($row['frequency']) ? number_format($row['frequency'], 2) : '—' }}</td>
             <td class="px-4 py-2">{{ isset($row['v1']) ? number_format($row['v1'], 2) : '—' }}</td>

@@ -200,6 +200,7 @@
         });
       }
       else if (type === "load") {
+        /*
         if (!datasets.loadSeries.length) {
           handleEmptyState("No load profile available for the selected window.");
           return;
@@ -256,6 +257,73 @@
             labels: datasets.loadSeries.map(item => item.label),
             datasets: [{
               label: "Load Share (%)",
+              data: datasets.loadSeries.map(item => item.percentage),
+              backgroundColor: loadColors
+            }]
+          },
+          options: {
+            plugins: { legend: { position: "bottom" } }
+          }
+        });
+        */
+
+        if (!datasets.loadSeries.length) {
+          handleEmptyState("No load profile available for the selected window.");
+          return;
+        }
+
+        const loadWindow = datasets.viewSummary.load_window || {};
+        const windowEnd = loadWindow.end ? new Date(loadWindow.end).toLocaleString() : "n/a";
+        const windowHours = loadWindow.hours ? `${loadWindow.hours}h` : '24h';
+        const topContributor = datasets.loadSeries.length ? datasets.loadSeries[0].label : 'n/a';
+        const loadMetrics = [
+          renderMetric(
+            "Total kWh",
+            numberFormatter.format(datasets.loadSeries.reduce((sum, row) => sum + row.total_kwh, 0))
+          ),
+          renderMetric("Top Contributor", topContributor),
+          renderMetric("Buildings", datasets.loadSeries.length)
+        ].join("");
+        const loadRows = datasets.loadSeries.map(row => `
+          <li class="flex items-center justify-between border border-gray-100 rounded p-3">
+            <div>
+              <p class="font-semibold text-gray-900">${escapeHtml(row.label)}</p>
+              <p class="text-sm text-gray-500">${numberFormatter.format(row.total_kwh)} kWh</p>
+            </div>
+            <span class="text-base font-semibold text-gray-900">${row.percentage}%</span>
+          </li>
+        `).join("");
+        const loadColors = datasets.loadSeries.map((_, index) => palette[index % palette.length]);
+
+        wrapper.innerHTML = `
+          <div class="flex flex-col gap-4 mb-6 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h3 class="font-semibold text-lg">Aggregated Load Monitor (kWh)</h3>
+              <p class="text-sm text-gray-500">Window ${escapeHtml(windowHours)} ending ${escapeHtml(windowEnd)}</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3 lg:grid-cols-3 metric-grid">
+              ${loadMetrics}
+            </div>
+          </div>
+          <div class="flex flex-col gap-6 lg:flex-row lg:gap-10">
+            <div class="lg:w-1/2">
+              <canvas id="loadChart" height="220"></canvas>
+            </div>
+            <div class="lg:flex-1">
+              <ul class="space-y-3">
+                ${loadRows}
+              </ul>
+            </div>
+          </div>`;
+        viewDisplay.appendChild(wrapper);
+
+        const ctx = document.getElementById("loadChart");
+        chartInstance = new Chart(ctx, {
+          type: "doughnut",
+          data: {
+            labels: datasets.loadSeries.map(item => item.label),
+            datasets: [{
+              label: "Energy Share (%)",
               data: datasets.loadSeries.map(item => item.percentage),
               backgroundColor: loadColors
             }]

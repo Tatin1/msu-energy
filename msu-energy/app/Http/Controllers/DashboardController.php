@@ -267,19 +267,22 @@ class DashboardController extends Controller
         ]);
     }
     public function options() { return view('pages.options'); }
-    public function view()
+    public function view(Request $request)
     {
-        $datasets = $this->viewDatasets();
+        $loadWindowHours = (int) $request->query('load_window_hours', 24);
+        $datasets = $this->viewDatasets($loadWindowHours);
 
         return view('pages.view', $datasets);
     }
-    public function apiView()
+    public function apiView(Request $request)
     {
-        return response()->json($this->viewDatasets());
+        $loadWindowHours = (int) $request->query('load_window_hours', 24);
+
+        return response()->json($this->viewDatasets($loadWindowHours));
     }
     public function help() { return view('pages.help'); }
     public function about() { return view('pages.about'); }
-    private function viewDatasets(): array
+    private function viewDatasets(int $loadWindowHours = 24): array
     {
         $now = now();
         $timezone = config('app.timezone', 'UTC');
@@ -346,6 +349,7 @@ class DashboardController extends Controller
             ->values()
             ->all();
 
+        /*
         $loadWindowStart = $now->copy()->subDay();
         $rawLoadSeries = Reading::query()
             ->join('meters', 'meters.id', '=', 'readings.meter_id')
@@ -371,6 +375,33 @@ class DashboardController extends Controller
                 'percentage' => $percentage,
             ];
         })->values()->all();
+        */
+
+        $loadWindowStart = $now->copy()->subHours($loadWindowHours);
+        $rawLoadSeries = Reading::query()
+            ->join('meters', 'meters.id', '=', 'readings.meter_id')
+            ->join('buildings', 'buildings.id', '=', 'meters.building_id')
+            ->selectRaw('buildings.code as label, COALESCE(SUM(readings.kwh), 0) as total_kwh')
+            ->whereNotNull('readings.recorded_at')
+            ->whereBetween('readings.recorded_at', [$loadWindowStart, $now])
+            ->groupBy('buildings.code')
+            ->orderByDesc('total_kwh')
+            ->get()
+            ->map(fn ($row) => [
+                'label' => $row->label,
+                'total_kwh' => round((float) $row->total_kwh, 3),
+            ]);
+
+        $loadTotal = (float) $rawLoadSeries->sum('total_kwh');
+        $loadSeries = $rawLoadSeries->map(function (array $row) use ($loadTotal) {
+            $percentage = $loadTotal > 0 ? round(($row['total_kwh'] / $loadTotal) * 100, 2) : 0;
+
+            return [
+                'label' => $row['label'],
+                'total_kwh' => $row['total_kwh'],
+                'percentage' => $percentage,
+            ];
+        })->values()->all();
 
         $viewSummary = [
             'realtime_window' => [
@@ -381,6 +412,7 @@ class DashboardController extends Controller
             'load_window' => [
                 'start' => $loadWindowStart->toIso8601String(),
                 'end' => $now->toIso8601String(),
+                'hours' => $loadWindowHours,
             ],
         ];
 
