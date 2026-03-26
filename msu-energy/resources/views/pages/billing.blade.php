@@ -12,22 +12,22 @@
   {{-- Summary KPIs --}}
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
     <div class="card text-center">
-      <div class="kpi-label">This Month</div>
+      <div class="kpi-label">This Month Energy Consumption (kWh)</div>
       <div id="thisMonthkW" class="kpi">{{ number_format($summary['this_month_kwh'] ?? 0, 0) }} kWh</div>
     </div>
 
     <div class="card text-center">
-      <div class="kpi-label">Previous Month</div>
+      <div class="kpi-label">Last Month Energy Consumption (kWh)</div>
       <div id="previousMonthkW" class="kpi">{{ number_format($summary['last_month_kwh'] ?? 0, 0) }} kWh</div>
     </div>
 
     <div class="card text-center">
-      <div class="kpi-label">Total Cost</div>
+      <div class="kpi-label">This Month Total Cost</div>
       <div id="totalCost" class="kpi">₱{{ number_format($summary['total_cost'] ?? 0, 2) }}</div>
     </div>
 
     <div class="card text-center">
-      <div class="kpi-label">Average PF</div>
+      <div class="kpi-label">System Power Factor (PFIII)</div>
       <div id="avgPF" class="kpi">{{ number_format($summary['avg_pf'] ?? 0, 3) }}</div>
     </div>
     <p id="billingStatus" class="text-xs text-gray-500 mt-3">
@@ -88,13 +88,13 @@
 
     {{-- Energy Consumption Chart --}}
     <div class="card">
-      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Energy Consumption (kWh)</h2>
+      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">This Month Energy Consumption (kWh)</h2>
       <canvas id="billingEnergyChart" height="150"></canvas>
     </div>
 
     {{-- Previous Month KW Chart --}}
     <div class="card">
-      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Previous Month Consumption (kWh)</h2>
+      <h2 class="text-lg font-semibold mb-3 text-center text-maroon">Last Month Energy Consumption (kWh)</h2>
       <canvas id="previousMonthChart" height="150"></canvas>
     </div>
 

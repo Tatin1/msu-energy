@@ -113,7 +113,7 @@
           data: {
             labels: datasets.realtimeSeries.map(point => point.label),
             datasets: [{
-              label: "Active Power (kW)",
+              label: "Energy Consumption (kWh)",
               data: datasets.realtimeSeries.map(point => point.total_kw),
               borderColor: "#7a0e0e",
               backgroundColor: "#7a0e0e33",
@@ -122,7 +122,10 @@
             }]
           },
           options: {
-            scales: { y: { beginAtZero: true } },
+            scales: {
+              x: { title: { display: true, text: "Energy Consumption (kWh)" } },
+              y: { beginAtZero: true, title: { display: true, text: "Total Active Power (kW)" } }
+            },
             plugins: { legend: { position: "bottom" } }
           }
         });

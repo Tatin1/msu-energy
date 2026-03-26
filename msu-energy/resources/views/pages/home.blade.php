@@ -16,7 +16,7 @@
     {{-- Previous Month Chart --}}
     <div class="bg-white border rounded-2xl shadow p-2 flex-shrink-0"
          style="width:300px; height:360px; display:flex; flex-direction:column;">
-      <h3 class="text-maroon font-semibold mb-1 text-center text-sm">Previous Month Energy (kW)</h3>
+      <h3 class="text-maroon font-semibold mb-1 text-center text-sm">Last Month Total (kWhIII)</h3>
       <canvas id="prevMonthChart" style="height:280px;"></canvas>
     </div>
 
@@ -50,22 +50,22 @@
         {{-- KPI Column --}}
         <div class="flex flex-col gap-3 flex-1">
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
-            <h3 class="font-bold text-sm mb-1">TOTAL POWER (kW)</h3>
+            <h3 class="font-bold text-sm mb-1">TOTAL ACTIVE POWER (kWIII)</h3>
             <p id="dashboardTotalPower" class="text-2xl font-extrabold">{{ number_format($totalPower ?? 0, 0) }}</p>
           </div>
 
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
-            <h3 class="font-bold text-sm mb-1">POWER FACTOR (PF)</h3>
+            <h3 class="font-bold text-sm mb-1">SYSTEM POWER FACTOR (PFIII)</h3>
             <p id="dashboardAvgPf" class="text-2xl font-extrabold">{{ number_format($avgPF ?? 0, 4) }}</p>
           </div>
 
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
-            <h3 class="font-bold text-sm mb-1">LAST MONTH (kW)</h3>
+            <h3 class="font-bold text-sm mb-1">LAST MONTH TOTAL ENERGY (kWhIII)</h3>
             <p id="dashboardLastMonth" class="text-2xl font-extrabold">{{ number_format($lastMonthkW ?? 0, 0) }}</p>
           </div>
 
           <div class="bg-gray-300 rounded-xl text-center p-3 border-2 border-black h-full flex flex-col justify-center">
-            <h3 class="font-bold text-sm mb-1">THIS MONTH (kW)</h3>
+            <h3 class="font-bold text-sm mb-1">THIS MONTH TOTAL ENERGY (kWhIII)</h3>
             <p id="dashboardThisMonth" class="text-2xl font-extrabold">{{ number_format($thisMonthkW ?? 0, 0) }}</p>
           </div>
         </div>
@@ -90,13 +90,13 @@
       const ctx = document.getElementById("buildingChart").getContext("2d");
       new Chart(ctx, {
         type: "bar",
-        data: { labels, datasets: [{ label: "kW", data: values, backgroundColor: colors, borderRadius: 8 }] },
-        options: { responsive: true, scales: { y: { beginAtZero: true, title: { display: true, text: "Kilowatt-Hour (kW)" } } }, plugins: { legend: { display: false } } }
+        data: { labels, datasets: [{ label: "kWhIII", data: values, backgroundColor: colors, borderRadius: 8 }] },
+        options: { responsive: true, scales: { y: { beginAtZero: true, title: { display: true, text: "Energy Consumed (kWhIII)" } } }, plugins: { legend: { display: false } } }
       });
       const ctxPrev = document.getElementById("prevMonthChart").getContext("2d");
       new Chart(ctxPrev, {
         type: "bar",
-        data: { labels, datasets: [{ label: "kW", data: prevValues, backgroundColor: colors, borderRadius: 8 }] },
+        data: { labels, datasets: [{ label: "kWhIII", data: prevValues, backgroundColor: colors, borderRadius: 8 }] },
         options: { responsive: true, scales: { y: { beginAtZero: true } }, plugins: { legend: { display: false } } }
       });
     });

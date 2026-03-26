@@ -78,16 +78,16 @@
 
     {{-- Energy Consumption Chart --}}
     <div class="card bg-panel p-5 rounded-2xl shadow">
-      <h2 class="text-xl font-semibold mb-4">Energy Consumption (kW)</h2>
+      <h2 class="text-xl font-semibold mb-4">Energy Consumption (kWh)</h2>
       <canvas id="paramEnergyChart" height="180"></canvas>
 
       <div class="grid grid-cols-2 gap-4 mt-6">
   <div>
-    <span class="text-sm">Last Month (kW)</span>
+    <span class="text-sm">Last Month (kWh)</span>
     <div id="paramLastMonth" class="font-bold text-lg">0</div>
   </div>
   <div>
-    <span class="text-sm">This Month (kW)</span>
+    <span class="text-sm">This Month (kWh)</span>
     <div id="paramThisMonth" class="font-bold text-lg">0</div>
   </div>
 </div>
@@ -191,7 +191,7 @@
               y: {
                 beginAtZero: true,
                 stacked: true,
-                title: { display: true, text: 'kWh' },
+                title: { display: true, text: 'Total Energy (kWhIII)' },
               },
             },
             plugins: {
