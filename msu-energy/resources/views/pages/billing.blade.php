@@ -10,7 +10,7 @@
   <h1 class="text-3xl font-bold text-maroon mb-6">Billing Summary</h1>
 
   {{-- Summary KPIs --}}
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5 mb-8">
     <div class="card text-center">
       <div class="kpi-label">This Month Energy Consumption (kWh)</div>
       <div id="thisMonthkW" class="kpi">{{ number_format($summary['this_month_kwh'] ?? 0, 0) }} kWh</div>
@@ -24,6 +24,11 @@
     <div class="card text-center">
       <div class="kpi-label">This Month Total Cost</div>
       <div id="totalCost" class="kpi">₱{{ number_format($summary['total_cost'] ?? 0, 2) }}</div>
+    </div>
+
+    <div class="card text-center">
+      <div class="kpi-label">Last Month Total Cost</div>
+      <div id="lastMonthCost" class="kpi">₱{{ isset($summary['last_month_kwh']) && isset($summary['rate']) ? number_format($summary['last_month_kwh'] * $summary['rate'], 2) : '0.00' }}</div>
     </div>
 
     <div class="card text-center">
@@ -132,6 +137,7 @@
         summary,
         buildings: config.buildings ?? [],
         trend: config.trend ?? [],
+        tariffRate: config.rate ?? 0,
       };
 
       const buildBuildingDataset = (buildings = []) => {
@@ -203,6 +209,7 @@
         const thisMonth = source?.this_month_kwh ?? 0;
         const lastMonth = source?.last_month_kwh ?? 0;
         const cost = source?.cost ?? source?.total_cost ?? 0;
+        const lastMonthCost = (lastMonth * state.tariffRate);
         const avgPf = payload && payload.avg_pf !== null
           ? payload.avg_pf
           : (state.summary?.avg_pf ?? null);
@@ -210,6 +217,7 @@
         document.getElementById('thisMonthkW').textContent = `${formatNumber(thisMonth, { maximumFractionDigits: 0 })} kWh`;
         document.getElementById('previousMonthkW').textContent = `${formatNumber(lastMonth, { maximumFractionDigits: 0 })} kWh`;
         document.getElementById('totalCost').textContent = `₱${formatNumber(cost, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        document.getElementById('lastMonthCost').textContent = `₱${formatNumber(lastMonthCost, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
         document.getElementById('avgPF').textContent = avgPf !== null
           ? formatNumber(avgPf, { minimumFractionDigits: 3, maximumFractionDigits: 3 })
           : '—';
