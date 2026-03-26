@@ -19,7 +19,7 @@ const renderTransformerRows = (tbody, rows = []) => {
   }
 
   if (!rows.length) {
-    setEmptyRow(tbody, 'No transformer logs available yet.', 12);
+    setEmptyRow(tbody, 'No transformer logs available yet.', 24);
     return;
   }
 
@@ -28,8 +28,11 @@ const renderTransformerRows = (tbody, rows = []) => {
 
     return `
       <tr class="hover:bg-gray-100">
-        <td class="px-4 py-2 font-medium">${index + 1}</td>
-        <td class="px-4 py-2">${row.recorded_at ?? '—'}</td>
+        <td class="px-4 py-2 font-medium">${row.id ?? '—'}</td>
+        <td class="px-4 py-2">${row.date ?? '—'}</td>
+        <td class="px-4 py-2">${row.time ?? '—'}</td>
+        <td class="px-4 py-2">${row.time_ed ?? '—'}</td>
+        <td class="px-4 py-2">${row.meter ?? '—'}</td>
         <td class="px-4 py-2">${format(row.frequency, 2)}</td>
         <td class="px-4 py-2">${format(row.v1, 2)}</td>
         <td class="px-4 py-2">${format(row.v2, 2)}</td>
@@ -37,8 +40,18 @@ const renderTransformerRows = (tbody, rows = []) => {
         <td class="px-4 py-2">${format(row.a1, 2)}</td>
         <td class="px-4 py-2">${format(row.a2, 2)}</td>
         <td class="px-4 py-2">${format(row.a3, 2)}</td>
-        <td class="px-4 py-2">${format(row.pf, 3)}</td>
+        <td class="px-4 py-2">${format(row.kw1, 3)}</td>
+        <td class="px-4 py-2">${format(row.kw2, 3)}</td>
+        <td class="px-4 py-2">${format(row.kw3, 3)}</td>
+        <td class="px-4 py-2">${format(row.pf1, 3)}</td>
+        <td class="px-4 py-2">${format(row.pf2, 3)}</td>
+        <td class="px-4 py-2">${format(row.pf3, 3)}</td>
+        <td class="px-4 py-2">${format(row.kwiii, 3)}</td>
+        <td class="px-4 py-2">${format(row.kvaiii, 3)}</td>
+        <td class="px-4 py-2">${format(row.kvariii, 3)}</td>
+        <td class="px-4 py-2">${format(row.pfiii, 3)}</td>
         <td class="px-4 py-2">${format(row.kwh, 3)}</td>
+        <td class="px-4 py-2">${format(row.cost, 2)}</td>
       </tr>
     `;
   }).join('');
@@ -84,7 +97,7 @@ const renderSystemRows = (tbody, rows = []) => {
 
     return `
       <tr class="hover:bg-gray-100">
-        <td class="px-4 py-2 font-medium">${index + 1}</td>
+        <td class="px-4 py-2 font-medium">${row.id ?? '—'}</td>
         <td class="px-4 py-2">${row.date ?? '—'}</td>
         <td class="px-4 py-2">${row.time ?? '—'}</td>
         <td class="px-4 py-2">${row.time_ed ?? '—'}</td>

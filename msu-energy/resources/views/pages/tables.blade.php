@@ -78,26 +78,40 @@
       <table id="transformerTable" class="min-w-full border border-gray-300 rounded-xl text-sm">
         <thead class="bg-maroon text-white">
           <tr>
-            <th class="px-4 py-2 text-left">#</th>
-            {{-- <th class="px-4 py-2 text-left">Log ID</th> --}}
-            <th class="px-4 py-2 text-left">Recorded At</th>
-            <th class="px-4 py-2 text-left">Frequency (Hz)</th>
-            <th class="px-4 py-2 text-left">V1 (V)</th>
-            <th class="px-4 py-2 text-left">V2 (V)</th>
-            <th class="px-4 py-2 text-left">V3 (V)</th>
-            <th class="px-4 py-2 text-left">A1 (A)</th>
-            <th class="px-4 py-2 text-left">A2 (A)</th>
-            <th class="px-4 py-2 text-left">A3 (A)</th>
-            <th class="px-4 py-2 text-left">PF</th>
-            <th class="px-4 py-2 text-left">kWh</th>
+            <th class="px-4 py-2 text-left">ID</th>
+            <th class="px-4 py-2 text-left">Date</th>
+            <th class="px-4 py-2 text-left">Time</th>
+            <th class="px-4 py-2 text-left">Timed</th>
+            <th class="px-4 py-2 text-left">Meter</th>
+            <th class="px-4 py-2 text-left">F</th>
+            <th class="px-4 py-2 text-left">V1</th>
+            <th class="px-4 py-2 text-left">V2</th>
+            <th class="px-4 py-2 text-left">V3</th>
+            <th class="px-4 py-2 text-left">A1</th>
+            <th class="px-4 py-2 text-left">A2</th>
+            <th class="px-4 py-2 text-left">A3</th>
+            <th class="px-4 py-2 text-left">kW1</th>
+            <th class="px-4 py-2 text-left">kW2</th>
+            <th class="px-4 py-2 text-left">kW3</th>
+            <th class="px-4 py-2 text-left">PF1</th>
+            <th class="px-4 py-2 text-left">PF2</th>
+            <th class="px-4 py-2 text-left">PF3</th>
+            <th class="px-4 py-2 text-left">kWIII</th>
+            <th class="px-4 py-2 text-left">KVAIII</th>
+            <th class="px-4 py-2 text-left">kVARIII</th>
+            <th class="px-4 py-2 text-left">PFIII</th>
+            <th class="px-4 py-2 text-left">kWhIII</th>
+            <th class="px-4 py-2 text-left">Cost</th>
           </tr>
         </thead>
         <tbody class="divide-y">
           @forelse(($transformerRows ?? collect()) as $index => $row)
           <tr class="hover:bg-gray-100">
-            <td class="px-4 py-2 font-medium">{{ $index + 1 }}</td>
-            {{-- <td class="px-4 py-2">{{ $row['id'] ?? '—' }}</td> --}}
-            <td class="px-4 py-2">{{ $row['recorded_at'] ?? '—' }}</td>
+            <td class="px-4 py-2 font-medium">{{ $row['id'] ?? '—' }}</td>
+            <td class="px-4 py-2">{{ $row['date'] ?? '—' }}</td>
+            <td class="px-4 py-2">{{ $row['time'] ?? '—' }}</td>
+            <td class="px-4 py-2">{{ $row['time_ed'] ?? '—' }}</td>
+            <td class="px-4 py-2">{{ $row['meter'] ?? '—' }}</td>
             <td class="px-4 py-2">{{ isset($row['frequency']) ? number_format($row['frequency'], 2) : '—' }}</td>
             <td class="px-4 py-2">{{ isset($row['v1']) ? number_format($row['v1'], 2) : '—' }}</td>
             <td class="px-4 py-2">{{ isset($row['v2']) ? number_format($row['v2'], 2) : '—' }}</td>
@@ -105,12 +119,22 @@
             <td class="px-4 py-2">{{ isset($row['a1']) ? number_format($row['a1'], 2) : '—' }}</td>
             <td class="px-4 py-2">{{ isset($row['a2']) ? number_format($row['a2'], 2) : '—' }}</td>
             <td class="px-4 py-2">{{ isset($row['a3']) ? number_format($row['a3'], 2) : '—' }}</td>
-            <td class="px-4 py-2">{{ isset($row['pf']) ? number_format($row['pf'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['kw1']) ? number_format($row['kw1'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['kw2']) ? number_format($row['kw2'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['kw3']) ? number_format($row['kw3'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['pf1']) ? number_format($row['pf1'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['pf2']) ? number_format($row['pf2'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['pf3']) ? number_format($row['pf3'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['kwiii']) ? number_format($row['kwiii'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['kvaiii']) ? number_format($row['kvaiii'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['kvariii']) ? number_format($row['kvariii'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['pfiii']) ? number_format($row['pfiii'], 3) : '—' }}</td>
             <td class="px-4 py-2">{{ isset($row['kwh']) ? number_format($row['kwh'], 3) : '—' }}</td>
+            <td class="px-4 py-2">{{ isset($row['cost']) ? number_format($row['cost'], 2) : '—' }}</td>
           </tr>
           @empty
           <tr>
-            <td colspan="12" class="px-4 py-4 text-center text-gray-500">No transformer logs available yet.</td>
+            <td colspan="24" class="px-4 py-4 text-center text-gray-500">No transformer logs available yet.</td>
           </tr>
           @endforelse
         </tbody>
@@ -142,10 +166,10 @@
             <th class="px-4 py-2 text-left">Timestamp</th>
           </tr> --}}
           <tr>
-            <th class="px-4 py-2 text-left">#</th>
+            <th class="px-4 py-2 text-left">ID</th>
             <th class="px-4 py-2 text-left">Date</th>
-            <th class="px-4 py-2 text-left">Time Start</th>
-            <th class="px-4 py-2 text-left">Time End</th>
+            <th class="px-4 py-2 text-left">Time</th>
+            <th class="px-4 py-2 text-left">Timed</th>
             <th class="px-4 py-2 text-left">Total kW</th>
             <th class="px-4 py-2 text-left">Total kVAR</th>
             <th class="px-4 py-2 text-left">Total kVA</th>
@@ -181,7 +205,7 @@
             <td class="px-4 py-2 text-gray-600">{{ $row[3] }}</td>
           </tr> --}}
           <tr class="hover:bg-gray-100">
-            <td class="px-4 py-2 font-medium">{{ $index + 1 }}</td>
+            <td class="px-4 py-2 font-medium">{{ $row['id'] ?? '—' }}</td>
             <td class="px-4 py-2">{{ $row['date'] ?? '—' }}</td>
             <td class="px-4 py-2">{{ $row['time'] ?? '—' }}</td>
             <td class="px-4 py-2">{{ $row['time_ed'] ?? '—' }}</td>

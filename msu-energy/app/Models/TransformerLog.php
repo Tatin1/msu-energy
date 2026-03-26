@@ -39,4 +39,9 @@ class TransformerLog extends Model
     protected $casts = [
         'recorded_at' => 'datetime',
     ];
+
+    public function meter()
+    {
+        return $this->belongsTo(Meter::class);
+    }
 }

@@ -461,15 +461,17 @@ class DashboardController extends Controller
         */
 
         return TransformerLog::query()
+            ->with(['meter:id,meter_code'])
             ->orderByDesc('recorded_at')
             ->limit(15)
             ->get()
             ->map(function (TransformerLog $log) {
                 return [
                     'id' => $log->id,
-                    'recorded_at' => $log->recorded_at
-                        ? $log->recorded_at->timezone(config('app.timezone'))->format('Y-m-d H:i:s')
-                        : null,
+                    'date' => $log->date,
+                    'time' => $log->time,
+                    'time_ed' => $log->time_ed,
+                    'meter' => $log->meter?->meter_code,
                     'frequency' => $log->frequency,
                     'v1' => $log->v1,
                     'v2' => $log->v2,
@@ -477,8 +479,18 @@ class DashboardController extends Controller
                     'a1' => $log->a1,
                     'a2' => $log->a2,
                     'a3' => $log->a3,
-                    'pf' => $log->pf,
+                    'kw1' => $log->kw1,
+                    'kw2' => $log->kw2,
+                    'kw3' => $log->kw3,
+                    'pf1' => $log->pf1,
+                    'pf2' => $log->pf2,
+                    'pf3' => $log->pf3,
+                    'kwiii' => $log->kwiii,
+                    'kvaiii' => $log->kvaiii,
+                    'kvariii' => $log->kvariii,
+                    'pfiii' => $log->pfiii,
                     'kwh' => $log->kwh,
+                    'cost' => $log->cost,
                 ];
             });
     }
@@ -517,6 +529,7 @@ class DashboardController extends Controller
                 }
 
                 return [
+                    'id' => $log->id,
                     'date' => $log->date,
                     'time' => $log->time,
                     'time_ed' => $log->time_ed,
