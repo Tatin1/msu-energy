@@ -7,6 +7,7 @@ use App\Models\Building;
 use App\Models\Meter;
 use App\Models\Reading;
 use App\Models\SystemLog;
+use App\Models\Tariff;
 use App\Models\TransformerLog;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
@@ -15,6 +16,7 @@ class DummyDataSeeder extends Seeder
 {
     public function run(): void
     {
+        $tariffRate = (float) (Tariff::query()->value('rate') ?? 12.0);
         $timeSlots = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00'];
 
         $seriesTemplates = [
@@ -87,8 +89,15 @@ class DummyDataSeeder extends Seeder
                 $apparent = $series['apparent_power'][$index] ?? null;
                 $reactive = $series['reactive_power'][$index] ?? null;
                 $powerFactor = ($active && $apparent) ? round($active / max($apparent, 1), 3) : 0.94;
+                $kw1 = $active !== null ? round($active * 0.34, 3) : null;
+                $kw2 = $active !== null ? round($active * 0.33, 3) : null;
+                $kw3 = $active !== null ? round($active * 0.33, 3) : null;
+                $pf1 = round(min(1, max(0, $powerFactor + 0.005)), 3);
+                $pf2 = round(min(1, max(0, $powerFactor)), 3);
+                $pf3 = round(min(1, max(0, $powerFactor - 0.005)), 3);
                 $voltage = 228 + ($index % 3);
                 $current = $apparent ? round(($apparent * 1000) / max($voltage * 1.732, 1), 2) : null;
+                $kwh = round($kwhPerSlot, 3);
 
                 Reading::updateOrCreate(
                     [
@@ -102,11 +111,18 @@ class DummyDataSeeder extends Seeder
                         'current1' => $current,
                         'current2' => $current,
                         'current3' => $current,
+                        'kw1' => $kw1,
+                        'kw2' => $kw2,
+                        'kw3' => $kw3,
+                        'pf1' => $pf1,
+                        'pf2' => $pf2,
+                        'pf3' => $pf3,
                         'power_factor' => $powerFactor,
                         'active_power' => $active,
                         'reactive_power' => $reactive,
                         'apparent_power' => $apparent,
-                        'kwh' => round($kwhPerSlot, 3),
+                        'kwh' => $kwh,
+                        'cost' => round($kwh * $tariffRate, 2),
                     ]
                 );
             }
@@ -128,9 +144,28 @@ class DummyDataSeeder extends Seeder
         ];
 
         foreach ($transformerSamples as $sample) {
+            $recordedAt = Carbon::parse($sample['timestamp'], config('app.timezone'));
+            $meter = Meter::query()->where('meter_code', 'COE-MAIN')->first()
+                ?? Meter::query()->inRandomOrder()->first();
+            $kwiii = round((float) $sample['load'], 3);
+            $kw1 = round($kwiii * 0.34, 3);
+            $kw2 = round($kwiii * 0.33, 3);
+            $kw3 = round($kwiii * 0.33, 3);
+            $pfiii = round((float) $sample['pf'], 3);
+            $pf1 = round(min(1, max(0, $pfiii + 0.005)), 3);
+            $pf2 = $pfiii;
+            $pf3 = round(min(1, max(0, $pfiii - 0.005)), 3);
+            $kvariii = round($kwiii * 0.45, 3);
+            $kvaiii = round(sqrt(($kwiii ** 2) + ($kvariii ** 2)), 3);
+            $kwh = $kwiii;
+
             TransformerLog::updateOrCreate(
-                ['recorded_at' => Carbon::parse($sample['timestamp'], config('app.timezone'))],
+                ['recorded_at' => $recordedAt],
                 [
+                    'meter_id' => $meter?->id,
+                    'date' => $recordedAt->toDateString(),
+                    'time' => $recordedAt->format('H:i:s'),
+                    'time_ed' => $recordedAt->copy()->addMinutes(15)->format('H:i:s'),
                     'frequency' => 60.0,
                     'v1' => $sample['voltage'],
                     'v2' => $sample['voltage'] + 1,
@@ -138,8 +173,18 @@ class DummyDataSeeder extends Seeder
                     'a1' => $sample['load'] / 3,
                     'a2' => $sample['load'] / 3,
                     'a3' => $sample['load'] / 3,
-                    'pf' => $sample['pf'],
-                    'kwh' => $sample['load'],
+                    'kw1' => $kw1,
+                    'kw2' => $kw2,
+                    'kw3' => $kw3,
+                    'pf1' => $pf1,
+                    'pf2' => $pf2,
+                    'pf3' => $pf3,
+                    'kwiii' => $kwiii,
+                    'kvaiii' => $kvaiii,
+                    'kvariii' => $kvariii,
+                    'pfiii' => $pfiii,
+                    'kwh' => $kwh,
+                    'cost' => round($kwh * $tariffRate, 2),
                 ]
             );
         }

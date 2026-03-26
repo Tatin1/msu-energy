@@ -22,19 +22,21 @@ class BuildingSeeder extends Seeder
         ];
 
         foreach ($buildings as $code => $details) {
-            Building::create([
-                'code' => $code,
-                'name' => $details['name'],
-                'is_online' => $details['online'],
-            ]);
+            Building::updateOrCreate(
+                ['code' => $code],
+                [
+                    'name' => $details['name'],
+                    'is_online' => $details['online'],
+                ]
+            );
         }
 
         // temporary meters for each building
         foreach (Building::all() as $building) {
-            $building->meters()->create([
-                'meter_code' => $building->code . '-MTR-1',
-                'label' => 'Main Panel - ' . $building->code,
-            ]);
+            $building->meters()->updateOrCreate(
+                ['meter_code' => $building->code . '-MTR-1'],
+                ['label' => 'Main Panel - ' . $building->code]
+            );
         }
     }
 }

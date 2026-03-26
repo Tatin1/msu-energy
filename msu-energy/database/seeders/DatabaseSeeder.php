@@ -71,14 +71,14 @@ class DatabaseSeeder extends Seeder
 
         // $this->call(DummyDataSeeder::class);
 
+        \App\Models\Tariff::updateOrCreate(
+            ['name' => 'default'],
+            ['rate' => 12.00]
+        );
+
         $this->call([
             BuildingSeeder::class,
-        ]);
-
-        // 💡 Default Tariff
-        \App\Models\Tariff::create([
-            'name'=>'default',
-            'rate'=>12.00
+            // DummyDataSeeder::class,
         ]);
 
         // 👤 Default Admin User (login credentials)
