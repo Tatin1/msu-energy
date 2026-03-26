@@ -15,6 +15,10 @@ class StoreTransformerLogRequest extends FormRequest
     {
         return [
             'recorded_at' => ['required', 'date'],
+            'meter_id' => ['nullable', 'integer', 'exists:meters,id'],
+            'date' => ['nullable', 'date'],
+            'time' => ['nullable', 'date_format:H:i'],
+            'time_ed' => ['nullable', 'date_format:H:i'],
             'frequency' => ['nullable', 'numeric'],
             'v1' => ['nullable', 'numeric'],
             'v2' => ['nullable', 'numeric'],
@@ -22,7 +26,16 @@ class StoreTransformerLogRequest extends FormRequest
             'a1' => ['nullable', 'numeric'],
             'a2' => ['nullable', 'numeric'],
             'a3' => ['nullable', 'numeric'],
-            'pf' => ['nullable', 'numeric', 'between:-1,1'],
+            'kw1' => ['nullable', 'numeric'],
+            'kw2' => ['nullable', 'numeric'],
+            'kw3' => ['nullable', 'numeric'],
+            'pf1' => ['nullable', 'numeric', 'between:-1,1'],
+            'pf2' => ['nullable', 'numeric', 'between:-1,1'],
+            'pf3' => ['nullable', 'numeric', 'between:-1,1'],
+            'kwiii' => ['nullable', 'numeric'],
+            'kvaiii' => ['nullable', 'numeric'],
+            'kvariii' => ['nullable', 'numeric'],
+            'pfiii' => ['nullable', 'numeric', 'between:-1,1'],
             'kwh' => ['nullable', 'numeric'],
         ];
     }

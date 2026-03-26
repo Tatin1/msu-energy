@@ -17,11 +17,18 @@ class Reading extends Model
         'current1',
         'current2',
         'current3',
+        'kw1',
+        'kw2',
+        'kw3',
+        'pf1',
+        'pf2',
+        'pf3',
         'power_factor',
         'active_power',
         'reactive_power',
         'apparent_power',
         'kwh',
+        'cost',
         'recorded_at',
     ];
 

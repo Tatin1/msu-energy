@@ -10,8 +10,30 @@ class TransformerLog extends Model
     use HasFactory;
 
     protected $fillable = [
-        'recorded_at', 'frequency', 'v1', 'v2', 'v3',
-        'a1', 'a2', 'a3', 'pf', 'kwh'
+        'meter_id',
+        'date',
+        'time',
+        'time_ed',
+        'recorded_at',
+        'frequency',
+        'v1',
+        'v2',
+        'v3',
+        'a1',
+        'a2',
+        'a3',
+        'kw1',
+        'kw2',
+        'kw3',
+        'pf1',
+        'pf2',
+        'pf3',
+        'kwiii',
+        'kvaiii',
+        'kvariii',
+        'pfiii',
+        'kwh',
+        'cost'
     ];
 
     protected $casts = [

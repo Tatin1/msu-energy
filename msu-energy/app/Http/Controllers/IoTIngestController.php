@@ -13,6 +13,7 @@ use App\Http\Requests\StoreTransformerLogRequest;
 use App\Models\BuildingLog;
 use App\Models\Meter;
 use App\Models\SystemLog;
+use App\Models\Tariff;
 use App\Models\TransformerLog;
 use App\Support\RealtimePayloads;
 use Illuminate\Http\Response;
@@ -29,6 +30,7 @@ class IoTIngestController extends Controller
         $payload = $validated;
         unset($payload['meter_code']);
         $payload['recorded_at'] = Carbon::parse($payload['recorded_at']);
+        $payload['cost'] = $this->calculateCost($payload['kwh'] ?? null);
 
         $meter->readings()->create($payload);
 
@@ -63,10 +65,20 @@ class IoTIngestController extends Controller
             $payload['recorded_at'] = Carbon::parse($payload['recorded_at']);
         }
 
+        $payload['cost'] = $this->calculateCost($payload['kwh'] ?? null);
+
         TransformerLog::create($payload);
 
         event(new TransformerLogRecorded(RealtimePayloads::transformerTable()));
 
         return response()->noContent();
+    }
+
+    private function calculateCost(null|int|float|string $kwh): float
+    {
+        $energy = is_numeric($kwh) ? (float) $kwh : 0.0;
+        $rate = (float) (Tariff::query()->value('rate') ?? 0);
+
+        return round($energy * $rate, 2);
     }
 }
