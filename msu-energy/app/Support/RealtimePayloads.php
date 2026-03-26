@@ -29,10 +29,27 @@ class RealtimePayloads
         );
 
         $fifteenMinutesAgo = $now->copy()->subMinutes(15);
-        $totalPower = (float) Reading::query()
+        $recentTotalPower = (float) Reading::query()
             ->whereNotNull('active_power')
             ->whereBetween('recorded_at', [$fifteenMinutesAgo, $now])
             ->sum('active_power');
+
+        $totalPower = $recentTotalPower;
+
+        if ($totalPower <= 0) {
+            $latestMeterReadings = Reading::query()
+                ->selectRaw('meter_id, MAX(recorded_at) as latest_recorded_at')
+                ->whereNotNull('active_power')
+                ->whereNotNull('recorded_at')
+                ->groupBy('meter_id');
+
+            $totalPower = (float) Reading::query()
+                ->joinSub($latestMeterReadings, 'latest_meter_readings', function ($join) {
+                    $join->on('readings.meter_id', '=', 'latest_meter_readings.meter_id')
+                        ->on('readings.recorded_at', '=', 'latest_meter_readings.latest_recorded_at');
+                })
+                ->sum('readings.active_power');
+        }
 
         $avgPF = (float) Reading::query()
             ->whereNotNull('power_factor')

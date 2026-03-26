@@ -9,6 +9,7 @@ const state = {
   initialized: false,
   mainChart: null,
   prevChart: null,
+  lastTotals: null,
 };
 
 const hasWindowChart = () => typeof window !== 'undefined' && typeof window.Chart !== 'undefined';
@@ -103,10 +104,20 @@ const refreshCharts = (chartPayload) => {
 };
 
 const updateTotals = (totals = {}, generatedAt = null) => {
-  setText('dashboardTotalPower', formatNumber(totals.total_power));
-  setText('dashboardAvgPf', formatNumber(totals.avg_pf, formatters.decimal));
-  setText('dashboardLastMonth', formatNumber(totals.last_month_kwh));
-  setText('dashboardThisMonth', formatNumber(totals.this_month_kwh));
+  const previousTotals = state.lastTotals ?? {};
+  const safeTotals = {
+    total_power: Number(totals.total_power ?? 0) > 0 ? totals.total_power : (previousTotals.total_power ?? 0),
+    avg_pf: totals.avg_pf ?? previousTotals.avg_pf ?? 0,
+    last_month_kwh: totals.last_month_kwh ?? previousTotals.last_month_kwh ?? 0,
+    this_month_kwh: totals.this_month_kwh ?? previousTotals.this_month_kwh ?? 0,
+  };
+
+  setText('dashboardTotalPower', formatNumber(safeTotals.total_power));
+  setText('dashboardAvgPf', formatNumber(safeTotals.avg_pf, formatters.decimal));
+  setText('dashboardLastMonth', formatNumber(safeTotals.last_month_kwh));
+  setText('dashboardThisMonth', formatNumber(safeTotals.this_month_kwh));
+
+  state.lastTotals = safeTotals;
 
   if (generatedAt) {
     const timestamp = new Date(generatedAt);
