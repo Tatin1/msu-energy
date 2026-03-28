@@ -31,22 +31,22 @@ class RealtimePayloads
         $fifteenMinutesAgo = $now->copy()->subMinutes(15);
         $recentTotalPower = (float) Reading::query()
             ->whereNotNull('kwiii')
-            ->whereBetween('recorded_at', [$fifteenMinutesAgo, $now])
+            ->whereBetween('time', [$fifteenMinutesAgo, $now])
             ->sum('kwiii');
 
         $totalPower = $recentTotalPower;
 
         if ($totalPower <= 0) {
             $latestMeterReadings = Reading::query()
-                ->selectRaw('meter_id, MAX(recorded_at) as latest_recorded_at')
+                ->selectRaw('meter_id, MAX(time) as latest_time')
                 ->whereNotNull('kwiii')
-                ->whereNotNull('recorded_at')
+                ->whereNotNull('time')
                 ->groupBy('meter_id');
 
             $totalPower = (float) Reading::query()
                 ->joinSub($latestMeterReadings, 'latest_meter_readings', function ($join) {
                     $join->on('readings.meter_id', '=', 'latest_meter_readings.meter_id')
-                        ->on('readings.recorded_at', '=', 'latest_meter_readings.latest_recorded_at');
+                        ->on('readings.time', '=', 'latest_meter_readings.latest_time');
                 })
                 ->sum('readings.kwiii');
         }
@@ -56,11 +56,11 @@ class RealtimePayloads
             ->avg('pfiii');
 
         $lastMonthKwh = (float) Reading::query()
-            ->whereBetween('recorded_at', [$previousStart, $previousEnd])
+            ->whereBetween('time', [$previousStart, $previousEnd])
             ->sum('kwhiii');
 
         $thisMonthKwh = (float) Reading::query()
-            ->whereBetween('recorded_at', [$currentStart, $now])
+            ->whereBetween('time', [$currentStart, $now])
             ->sum('kwhiii');
 
         return [
@@ -137,8 +137,8 @@ class RealtimePayloads
             ->join('meters', 'meters.id', '=', 'readings.meter_id')
             ->join('buildings', 'buildings.id', '=', 'meters.building_id')
             ->selectRaw('buildings.code as label, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
-            ->whereNotNull('readings.recorded_at')
-            ->whereBetween('readings.recorded_at', [$start, $end])
+            ->whereNotNull('readings.time')
+            ->whereBetween('readings.time', [$start, $end])
             ->groupBy('buildings.code')
             ->orderByDesc('total_kwh')
             ->limit(5)

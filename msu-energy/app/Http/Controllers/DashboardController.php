@@ -46,7 +46,7 @@ class DashboardController extends Controller
         $fifteenMinutesAgo = $now->copy()->subMinutes(15);
         $totalPower = (float) Reading::query()
             ->whereNotNull('kwiii')
-            ->whereBetween('recorded_at', [$fifteenMinutesAgo, $now])
+            ->whereBetween('time', [$fifteenMinutesAgo, $now])
             ->sum('kwiii');
 
         $avgPF = (float) Reading::query()
@@ -54,11 +54,11 @@ class DashboardController extends Controller
             ->avg('pfiii');
 
         $lastMonthKwh = (float) Reading::query()
-            ->whereBetween('recorded_at', [$previousStart, $previousEnd])
+            ->whereBetween('time', [$previousStart, $previousEnd])
             ->sum('kwhiii');
 
         $thisMonthKwh = (float) Reading::query()
-            ->whereBetween('recorded_at', [$currentStart, $now])
+            ->whereBetween('time', [$currentStart, $now])
             ->sum('kwhiii');
 
         $lastMonthkW = $lastMonthKwh;
@@ -98,7 +98,7 @@ class DashboardController extends Controller
         $fifteenMinutesAgo = $now->copy()->subMinutes(15);
         $totalPower = (float) Reading::query()
             ->whereNotNull('kwiii')
-            ->whereBetween('recorded_at', [$fifteenMinutesAgo, $now])
+            ->whereBetween('time', [$fifteenMinutesAgo, $now])
             ->sum('kwiii');
 
         $avgPF = (float) Reading::query()
@@ -106,11 +106,11 @@ class DashboardController extends Controller
             ->avg('pfiii');
 
         $lastMonthKwh = (float) Reading::query()
-            ->whereBetween('recorded_at', [$previousStart, $previousEnd])
+            ->whereBetween('time', [$previousStart, $previousEnd])
             ->sum('kwhiii');
 
         $thisMonthKwh = (float) Reading::query()
-            ->whereBetween('recorded_at', [$currentStart, $now])
+            ->whereBetween('time', [$currentStart, $now])
             ->sum('kwhiii');
 
         $buildings = collect($labels)->map(function ($label, $index) use ($values, $prevValues) {
@@ -250,8 +250,8 @@ class DashboardController extends Controller
 
         $buildingLogs = Reading::query()
             ->with(['meter.building:id,code'])
-            ->whereNotNull('recorded_at')
-            ->orderByDesc('recorded_at')
+            ->whereNotNull('time')
+            ->orderByDesc('time')
             ->limit(50)
             ->get();
 
@@ -290,23 +290,23 @@ class DashboardController extends Controller
 
         $realtimeStart = $now->copy()->subHours(23)->startOfHour();
         $realtimeReadings = Reading::query()
-            ->select('kwiii', 'recorded_at')
-            ->whereNotNull('recorded_at')
+            ->select('kwiii', 'time')
+            ->whereNotNull('time')
             ->whereNotNull('kwiii')
-            ->whereBetween('recorded_at', [$realtimeStart, $now])
-            ->orderBy('recorded_at')
+            ->whereBetween('time', [$realtimeStart, $now])
+            ->orderBy('time')
             ->get();
 
         $realtimeBuckets = $realtimeReadings->groupBy(function (Reading $reading) use ($timezone) {
-            if ($reading->recorded_at === null) {
+            if ($reading->time === null) {
                 return null;
             }
 
-            if (is_string($reading->recorded_at)) {
-                $reading->recorded_at = \Carbon\Carbon::parse($reading->recorded_at);
+            if (is_string($reading->time)) {
+                $reading->time = \Carbon\Carbon::parse($reading->time);
             }
 
-            return $reading->recorded_at
+            return $reading->time
                 ->copy()
                 ->timezone($timezone)
                 ->format('Y-m-d H:00:00');
@@ -383,8 +383,8 @@ class DashboardController extends Controller
             ->join('meters', 'meters.id', '=', 'readings.meter_id')
             ->join('buildings', 'buildings.id', '=', 'meters.building_id')
             ->selectRaw('buildings.code as label, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
-            ->whereNotNull('readings.recorded_at')
-            ->whereBetween('readings.recorded_at', [$loadWindowStart, $now])
+            ->whereNotNull('readings.time')
+            ->whereBetween('readings.time', [$loadWindowStart, $now])
             ->groupBy('buildings.code')
             ->orderByDesc('total_kwh')
             ->get()
@@ -430,8 +430,8 @@ class DashboardController extends Controller
             ->join('meters', 'meters.id', '=', 'readings.meter_id')
             ->join('buildings', 'buildings.id', '=', 'meters.building_id')
             ->selectRaw('buildings.code as label, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
-            ->whereNotNull('readings.recorded_at')
-            ->whereBetween('readings.recorded_at', [$start, $end])
+            ->whereNotNull('readings.time')
+            ->whereBetween('readings.time', [$start, $end])
             ->groupBy('buildings.code')
             ->orderByDesc('total_kwh')
             ->limit(5)

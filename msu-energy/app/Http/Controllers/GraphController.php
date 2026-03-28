@@ -20,8 +20,6 @@ class GraphController extends Controller
 
     public function daily($meterId, $param, $date = null)
     {
-        // $data = \App\Models\Reading::where('meter_id',$meterId)->whereDate('recorded_at',$date)->orderBy('recorded_at')->pluck($param);
-
         $meter = Meter::findOrFail($meterId);
 
         if (! isset($this->parameters[$param])) {
@@ -35,19 +33,19 @@ class GraphController extends Controller
 
         $readings = Reading::query()
             ->where('meter_id', $meter->id)
-            ->whereDate('recorded_at', $targetDate->toDateString())
+            ->whereDate('time', $targetDate->toDateString())
             ->whereNotNull($column)
-            ->orderBy('recorded_at')
-            ->get(['recorded_at', $column]);
+            ->orderBy('time')
+            ->get(['time', $column]);
 
         $response = [
             'labels' => $readings->map(function ($row) {
                 $timestamp = null;
 
-                if ($row->recorded_at instanceof Carbon) {
-                    $timestamp = $row->recorded_at->copy();
-                } elseif (! empty($row->recorded_at)) {
-                    $timestamp = Carbon::parse($row->recorded_at, config('app.timezone'));
+                if ($row->time instanceof Carbon) {
+                    $timestamp = $row->time->copy();
+                } elseif (! empty($row->time)) {
+                    $timestamp = Carbon::parse($row->time, config('app.timezone'));
                 }
 
                 if (! $timestamp) {

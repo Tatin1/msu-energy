@@ -19,14 +19,14 @@ class BuildingStatusFormatter
             ->get();
 
         $recency = Reading::query()
-            ->selectRaw('meters.building_id, MAX(readings.recorded_at) as latest_recorded_at')
+            ->selectRaw('meters.building_id, MAX(readings.time) as latest_time')
             ->join('meters', 'meters.id', '=', 'readings.meter_id')
             ->groupBy('meters.building_id')
             ->get()
             ->keyBy('building_id');
 
         return $buildings->map(function (Building $building) use ($recency, $onlineThresholdMinutes, $idleThresholdMinutes, $timezone) {
-            $latest = optional($recency->get($building->id))->latest_recorded_at;
+            $latest = optional($recency->get($building->id))->latest_time;
             // $latestAt = $latest ? Carbon::parse($latest) : null;
             $latestAt = $latest
                 ? Carbon::parse($latest)->timezone($timezone)

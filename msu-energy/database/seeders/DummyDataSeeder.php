@@ -92,10 +92,11 @@ class DummyDataSeeder extends Seeder
                 Reading::updateOrCreate(
                     [
                         'meter_id' => $meter->id,
-                        'recorded_at' => $recordedAt,
+                        'time' => $recordedAt,
                     ],
                     [
-                        'frequency' => 60.0,
+                        'time_end' => $recordedAt->copy()->addMinutes(15),
+                        'f' => 60.0,
                         'v1' => $voltage,
                         'v2' => $voltage + 1,
                         'v3' => $voltage - 1,

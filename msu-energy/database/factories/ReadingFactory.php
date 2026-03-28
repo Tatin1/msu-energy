@@ -38,7 +38,7 @@ class ReadingFactory extends Factory
 
         return [
             'meter_id' => $meter_id,
-            'frequency' => fake()->randomFloat(2, 59.5, 60.5),
+            'f' => fake()->randomFloat(2, 59.5, 60.5),
             'v1' => fake()->randomFloat(2, 210, 250),
             'v2' => fake()->randomFloat(2, 210, 250),
             'v3' => fake()->randomFloat(2, 210, 250),
@@ -57,7 +57,8 @@ class ReadingFactory extends Factory
             'kvaiii' => $apparentPower,
             'kwhiii' => $kwh,
             'cost' => round($kwh * $tariffRate, 2),
-            'recorded_at' => $recordedAt,
+            'time' => $recordedAt,
+            'time_end' => $recordedAt->copy()->addMinutes(15),
         ];
     }
 }

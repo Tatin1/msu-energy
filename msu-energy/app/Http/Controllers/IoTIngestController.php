@@ -24,12 +24,19 @@ class IoTIngestController extends Controller
     public function storeReading(StoreReadingRequest $request): Response
     {
         $validated = $request->validated();
+        \Log::info('Received reading payload', $validated);
 
         $meter = Meter::where('meter_code', $validated['meter_code'])->firstOrFail();
 
         $payload = $validated;
         unset($payload['meter_code']);
-        $payload['recorded_at'] = Carbon::parse($payload['recorded_at']);
+        $payload['time'] = Carbon::parse($payload['time']);
+
+        if (! empty($payload['time_end'])) {
+            $payload['time_end'] = Carbon::parse($payload['time_end']);
+        } else {
+            $payload['time_end'] = $payload['time']->copy()->addMinutes(15);
+        }
 
         $meter->readings()->create($payload);
 

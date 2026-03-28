@@ -151,7 +151,7 @@ class IoTIngestionTest extends TestCase
     {
         return [
             'meter_code' => $this->meter->meter_code,
-            'recorded_at' => now()->toIso8601String(),
+            'time' => now()->toIso8601String(),
             'v1' => 229.4,
             'a1' => 12.5,
             'pfiii' => 0.97,

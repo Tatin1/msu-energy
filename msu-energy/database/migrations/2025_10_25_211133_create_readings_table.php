@@ -14,18 +14,27 @@ return new class extends Migration
         Schema::create('readings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('meter_id')->constrained()->cascadeOnDelete();
-            $table->decimal('voltage1',8,2)->nullable();
-            $table->decimal('voltage2',8,2)->nullable();
-            $table->decimal('voltage3',8,2)->nullable();
-            $table->decimal('current1',8,2)->nullable();
-            $table->decimal('current2',8,2)->nullable();
-            $table->decimal('current3',8,2)->nullable();
-            $table->decimal('power_factor', 5,3)->nullable();
-            $table->decimal('active_power', 10,3)->nullable(); // kW
-            $table->decimal('reactive_power',10,3)->nullable(); // kVAr
-            $table->decimal('apparent_power',10,3)->nullable(); // kVA
-            $table->decimal('kwh', 12,3)->nullable();
-            $table->timestamp('recorded_at')->nullable();
+            $table->decimal('f', 6, 2)->nullable();
+            $table->decimal('v1',8,2)->nullable();
+            $table->decimal('v2',8,2)->nullable();
+            $table->decimal('v3',8,2)->nullable();
+            $table->decimal('a1',8,2)->nullable();
+            $table->decimal('a2',8,2)->nullable();
+            $table->decimal('a3',8,2)->nullable();
+            $table->decimal('kw1', 10,3)->nullable();
+            $table->decimal('kw2', 10,3)->nullable();
+            $table->decimal('kw3', 10,3)->nullable();
+            $table->decimal('pf1', 5,3)->nullable();
+            $table->decimal('pf2', 5,3)->nullable();
+            $table->decimal('pf3', 5,3)->nullable();
+            $table->decimal('pfiii', 5,3)->nullable();
+            $table->decimal('kwiii', 10,3)->nullable();
+            $table->decimal('kvaiii', 10,3)->nullable();
+            $table->decimal('kvariii',10,3)->nullable();
+            $table->decimal('kwhiii', 12,3)->nullable();
+            $table->decimal('cost', 12,2)->nullable();
+            $table->timestamp('time')->nullable();
+            $table->timestamp('time_end')->nullable();
             $table->timestamps();
         });
 

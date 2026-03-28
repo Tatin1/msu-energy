@@ -16,7 +16,7 @@ class ReadingController extends Controller
         return response()->json($payload);
     }
     public function meterReadings($meterId) {
-        return response()->json(\App\Models\Reading::where('meter_id',$meterId)->orderBy('recorded_at','desc')->limit(50)->get());
+        return response()->json(\App\Models\Reading::where('meter_id',$meterId)->orderBy('time','desc')->limit(50)->get());
     }
 
 }

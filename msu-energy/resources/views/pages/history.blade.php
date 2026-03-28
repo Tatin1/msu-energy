@@ -73,13 +73,13 @@
                 </thead>
                 <tbody>
                     @forelse(($historyBuildingLogs ?? collect()) as $log)
-                        <tr class="hover:bg-gray-50" data-building="{{ $log->meter?->building?->code ?? '—' }}" data-date="{{ optional($log->recorded_at)->toDateString() ?? '—' }}">
+                        <tr class="hover:bg-gray-50" data-building="{{ $log->meter?->building?->code ?? '—' }}" data-date="{{ optional($log->time)->toDateString() ?? '—' }}">
                             <td class="border px-3 py-2">{{ $log->id }}</td>
                             <td class="border px-3 py-2">{{ $log->meter?->meter_code ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->toDateString() ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->format('H:i:s') ?? '—' }}</td>
-                            <td class="border px-3 py-2">—</td>
-                            <td class="border px-3 py-2">—</td>
+                            <td class="border px-3 py-2">{{ optional($log->time)->toDateString() ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ optional($log->time)->format('H:i:s') ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ optional($log->time_end)->format('H:i:s') ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->f ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->v1 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->v2 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->v3 ?? '—' }}</td>

@@ -11,7 +11,7 @@ class Reading extends Model
 
     protected $fillable = [
         'meter_id',
-        'frequency',
+        'f',
         'v1',
         'v2',
         'v3',
@@ -30,10 +30,14 @@ class Reading extends Model
         'kvaiii',
         'kwhiii',
         'cost',
-        'recorded_at',
+        'time',
+        'time_end',
     ];
 
-    protected $dates = ['recorded_at'];
+    protected $casts = [
+        'time' => 'datetime',
+        'time_end' => 'datetime',
+    ];
 
     public function meter()
     {

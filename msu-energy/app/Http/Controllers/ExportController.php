@@ -47,8 +47,8 @@ class ExportController extends Controller
 
         $query = Reading::query()
             ->with(['meter.building:id,code'])
-            ->whereNotNull('recorded_at')
-            ->orderByDesc('recorded_at');
+            ->whereNotNull('time')
+            ->orderByDesc('time');
 
         if (!empty($validated['building'])) {
             $query->whereHas('meter.building', function ($buildingQuery) use ($validated) {
@@ -57,13 +57,13 @@ class ExportController extends Controller
         }
 
         if (!empty($validated['date'])) {
-            $query->whereDate('recorded_at', Carbon::parse($validated['date'])->toDateString());
+            $query->whereDate('time', Carbon::parse($validated['date'])->toDateString());
         } else {
             if (!empty($validated['start_date'])) {
-                $query->whereDate('recorded_at', '>=', Carbon::parse($validated['start_date'])->toDateString());
+                $query->whereDate('time', '>=', Carbon::parse($validated['start_date'])->toDateString());
             }
             if (!empty($validated['end_date'])) {
-                $query->whereDate('recorded_at', '<=', Carbon::parse($validated['end_date'])->toDateString());
+                $query->whereDate('time', '<=', Carbon::parse($validated['end_date'])->toDateString());
             }
         }
 
@@ -77,7 +77,7 @@ class ExportController extends Controller
                     'meter' => 'SAMPLE-MTR-1',
                     'date' => '2025-10-25',
                     'time' => '08:15',
-                    'time_ed' => null,
+                    'time_ed' => '08:30',
                     'f' => null,
                     'v1' => 230,
                     'v2' => 228,
@@ -103,15 +103,17 @@ class ExportController extends Controller
 
         $rows = $buildingData->map(function ($row) {
             if ($row instanceof Reading) {
-                $recordedAt = $row->recorded_at ? Carbon::parse($row->recorded_at) : null;
+                $time = $row->time ? Carbon::parse($row->time) : null;
+                $timeEnd = $row->time_end ? Carbon::parse($row->time_end) : $time?->copy()->addMinutes(15);
 
                 return [
                     'id' => $row->id,
                     'meter' => $row->meter?->meter_code,
-                    'date' => $recordedAt?->toDateString(),
-                    'time' => $recordedAt?->format('H:i:s'),
-                    'time_ed' => null,
-                    'f' => $row->frequency,
+                    'date' => $time?->toDateString(),
+                    'time' => $time?->format('H:i:s'),
+                    'time_end' => $timeEnd?->format('H:i:s'),
+                    'time_ed' => $timeEnd?->format('H:i:s'),
+                    'f' => $row->f,
                     'v1' => $row->v1,
                     'v2' => $row->v2,
                     'v3' => $row->v3,
@@ -140,6 +142,7 @@ class ExportController extends Controller
                 'meter' => $payload['meter'] ?? null,
                 'date' => $payload['date'] ?? null,
                 'time' => $payload['time'] ?? null,
+                'time_end' => $payload['time_end'] ?? null,
                 'time_ed' => $payload['time_ed'] ?? null,
                 'f' => $payload['f'] ?? null,
                 'v1' => $payload['v1'] ?? null,

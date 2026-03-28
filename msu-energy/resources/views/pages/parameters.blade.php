@@ -128,7 +128,7 @@
       const renderParameters = (payload) => {
         const meters = payload?.meters ?? [];
         const readingSource = meters.flatMap((meter) => meter.readings ?? []);
-        const latestReading = readingSource.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at))[0] ?? null;
+        const latestReading = readingSource.sort((a, b) => new Date(b.time) - new Date(a.time))[0] ?? null;
 
         if (!latestReading) {
           paramTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500">No readings found for this building.</td></tr>';
@@ -156,7 +156,7 @@
         };
 
         const rows = [
-          ['Frequency', formatScalar(latestReading.frequency, 2), 'Hz'],
+          ['Frequency', formatScalar(latestReading.f, 2), 'Hz'],
           ['Phase Voltages (V1, V2, V3)', formatTriple([latestReading.v1, latestReading.v2, latestReading.v3], 2), 'V'],
           ['Line Currents (A1, A2, A3)', formatTriple([latestReading.a1, latestReading.a2, latestReading.a3], 2), 'A'],
           ['Active Power (kW1, kW2, kW3)', formatTriple([latestReading.kw1, latestReading.kw2, latestReading.kw3], 3), 'kW'],
@@ -223,10 +223,10 @@
         const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).getMonth();
 
         const buckets = readings.reduce((carry, reading) => {
-          if (!reading?.kwhiii || !reading?.recorded_at) {
+          if (!reading?.kwhiii || !reading?.time) {
             return carry;
           }
-          const recordedAt = new Date(reading.recorded_at);
+          const recordedAt = new Date(reading.time);
           const month = recordedAt.getMonth();
           const day = recordedAt.getDate();
           if (!carry[month]) {

@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\BuildingLog;
+use App\Models\Building;
+use App\Models\Meter;
+use App\Models\Reading;
 use App\Models\SystemLog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -14,11 +16,34 @@ class HistoryApiTest extends TestCase
 
     public function test_building_history_endpoint_filters_by_building_and_date(): void
     {
-        BuildingLog::create([
-            'building' => 'COE',
-            'date' => '2025-11-01',
-            'time' => '08:15:00',
-            'time_ed' => '08:30:00',
+        $building = Building::create([
+            'code' => 'COE',
+            'name' => 'College of Engineering',
+            'is_online' => true,
+        ]);
+
+        $otherBuilding = Building::create([
+            'code' => 'SET',
+            'name' => 'School of Engineering Technology',
+            'is_online' => true,
+        ]);
+
+        $meter = Meter::create([
+            'building_id' => $building->id,
+            'meter_code' => 'COE-MTR-1',
+            'label' => 'Main Panel',
+        ]);
+
+        $otherMeter = Meter::create([
+            'building_id' => $otherBuilding->id,
+            'meter_code' => 'SET-MTR-1',
+            'label' => 'Main Panel',
+        ]);
+
+        Reading::create([
+            'meter_id' => $meter->id,
+            'time' => '2025-11-01 08:15:00',
+            'time_end' => '2025-11-01 08:30:00',
             'f' => 60,
             'v1' => 230,
             'v2' => 231,
@@ -29,15 +54,14 @@ class HistoryApiTest extends TestCase
             'pf1' => 0.95,
             'pf2' => 0.95,
             'pf3' => 0.95,
-            'kwh' => 100.123,
+            'kwhiii' => 100.123,
         ]);
 
-        BuildingLog::create([
-            'building' => 'SET',
-            'date' => '2025-11-02',
-            'time' => '09:15:00',
-            'time_ed' => '09:30:00',
-            'kwh' => 80.000,
+        Reading::create([
+            'meter_id' => $otherMeter->id,
+            'time' => '2025-11-02 09:15:00',
+            'time_end' => '2025-11-02 09:30:00',
+            'kwhiii' => 80.000,
         ]);
 
         $this->getJson('/api/history/building-logs?building=COE&date=2025-11-01')
@@ -46,6 +70,8 @@ class HistoryApiTest extends TestCase
             ->assertJsonFragment([
                 'building' => 'COE',
                 'date' => '2025-11-01',
+                'time' => '08:15:00',
+                'time_ed' => '08:30:00',
             ]);
     }
 

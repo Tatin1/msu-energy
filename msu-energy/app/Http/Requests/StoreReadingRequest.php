@@ -15,8 +15,9 @@ class StoreReadingRequest extends FormRequest
     {
         return [
             'meter_code' => ['required', 'string', 'exists:meters,meter_code'],
-            'recorded_at' => ['required', 'date'],
-            'frequency'  => ['nullable', 'numeric'],
+            'time'       => ['required', 'date'],
+            'time_end'   => ['nullable', 'date', 'after_or_equal:time'],
+            'f'          => ['nullable', 'numeric'],
             'v1'         => ['nullable', 'numeric'],
             'v2'         => ['nullable', 'numeric'],
             'v3'         => ['nullable', 'numeric'],

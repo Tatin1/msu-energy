@@ -42,13 +42,13 @@ class BillingSnapshot
 
         $sumInRange = function (Carbon $start, Carbon $end) use ($baseReadings): float {
             return (float) (clone $baseReadings)
-                ->whereBetween('readings.recorded_at', [$start, $end])
+                ->whereBetween('readings.time', [$start, $end])
                 ->sum('readings.kwhiii');
         };
 
         $avgPfInRange = function (Carbon $start, Carbon $end) use ($baseReadings): ?float {
             return (clone $baseReadings)
-                ->whereBetween('readings.recorded_at', [$start, $end])
+                ->whereBetween('readings.time', [$start, $end])
                 ->whereNotNull('readings.pfiii')
                 ->avg('readings.pfiii');
         };
@@ -73,14 +73,14 @@ class BillingSnapshot
         }
 
         $perBuildingCurrent = (clone $baseReadings)
-            ->whereBetween('readings.recorded_at', [$rangeStart, $rangeEnd])
+            ->whereBetween('readings.time', [$rangeStart, $rangeEnd])
             ->groupBy('meters.building_id')
             ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwhiii), 0) as total_kwh, AVG(readings.pfiii) as avg_pf')
             ->get()
             ->keyBy('building_id');
 
         $perBuildingPrevious = (clone $baseReadings)
-            ->whereBetween('readings.recorded_at', [$previousStart, $previousEnd])
+            ->whereBetween('readings.time', [$previousStart, $previousEnd])
             ->groupBy('meters.building_id')
             ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
             ->get()
@@ -123,8 +123,8 @@ class BillingSnapshot
     private static function buildTrendSeries($baseReadings, Carbon $start, Carbon $end, string $timezone): array
     {
         return (clone $baseReadings)
-            ->whereBetween('readings.recorded_at', [$start, $end])
-            ->selectRaw('DATE(readings.recorded_at) as bucket, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
+            ->whereBetween('readings.time', [$start, $end])
+            ->selectRaw('DATE(readings.time) as bucket, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
             ->groupBy('bucket')
             ->orderBy('bucket')
             ->get()

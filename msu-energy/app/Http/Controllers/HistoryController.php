@@ -24,8 +24,8 @@ class HistoryController extends Controller
 
         $query = Reading::query()
             ->with(['meter.building:id,code'])
-            ->whereNotNull('recorded_at')
-            ->orderByDesc('recorded_at');
+            ->whereNotNull('time')
+            ->orderByDesc('time');
 
         if (!empty($validated['building'])) {
             $query->whereHas('meter.building', function ($buildingQuery) use ($validated) {
@@ -34,29 +34,31 @@ class HistoryController extends Controller
         }
 
         if (!empty($validated['date'])) {
-            $query->whereDate('recorded_at', Carbon::parse($validated['date'])->toDateString());
+            $query->whereDate('time', Carbon::parse($validated['date'])->toDateString());
         } else {
             if (!empty($validated['start_date'])) {
-                $query->whereDate('recorded_at', '>=', Carbon::parse($validated['start_date'])->toDateString());
+                $query->whereDate('time', '>=', Carbon::parse($validated['start_date'])->toDateString());
             }
             if (!empty($validated['end_date'])) {
-                $query->whereDate('recorded_at', '<=', Carbon::parse($validated['end_date'])->toDateString());
+                $query->whereDate('time', '<=', Carbon::parse($validated['end_date'])->toDateString());
             }
         }
 
         $paginator = $query->paginate($perPage);
 
         $data = collect($paginator->items())->map(function (Reading $log) {
-            $recordedAt = $log->recorded_at ? Carbon::parse($log->recorded_at) : null;
+            $time = $log->time ? Carbon::parse($log->time) : null;
+            $timeEnd = $log->time_end ? Carbon::parse($log->time_end) : $time?->copy()->addMinutes(15);
 
             return [
                 'id' => $log->id,
                 'building' => $log->meter?->building?->code,
                 'meter' => $log->meter?->meter_code,
-                'date' => $recordedAt?->toDateString(),
-                'time' => $recordedAt?->format('H:i:s'),
-                'time_ed' => null,
-                'f' => $log->frequency,
+                'date' => $time?->toDateString(),
+                'time' => $time?->format('H:i:s'),
+                'time_end' => $timeEnd?->format('H:i:s'),
+                'time_ed' => $timeEnd?->format('H:i:s'),
+                'f' => $log->f,
                 'v1' => $log->v1,
                 'v2' => $log->v2,
                 'v3' => $log->v3,
