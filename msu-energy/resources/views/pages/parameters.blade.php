@@ -129,6 +129,7 @@
         const meters = payload?.meters ?? [];
         const readingSource = meters.flatMap((meter) => meter.readings ?? []);
         const latestReading = readingSource.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at))[0] ?? null;
+        const latestTransformer = payload?.transformer_latest ?? null;
 
         if (!latestReading) {
           paramTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500">No readings found for this building.</td></tr>';
@@ -139,17 +140,32 @@
           return;
         }
 
+        const formatScalar = (value, digits = 3) => {
+          if (value === null || value === undefined || value === '') {
+            return '—';
+          }
+
+          return Number(value).toFixed(digits);
+        };
+
+        const formatTriple = (values, digits = 3) => {
+          const parts = values
+            .map((value) => (value === null || value === undefined || value === '') ? null : Number(value).toFixed(digits))
+            .filter((value) => value !== null);
+
+          return parts.length ? parts.join(', ') : '—';
+        };
+
         const rows = [
-          ['Frequency', latestReading.frequency ?? '—', 'Hz'],
-          ['Phase Voltages (V1,V2,V3)', [latestReading.voltage1, latestReading.voltage2, latestReading.voltage3].filter((v) => v !== null && v !== undefined).map((v) => Number(v).toFixed(1)).join(', '), 'V'],
-          ['Line Currents (A1,A2,A3)', [latestReading.current1, latestReading.current2, latestReading.current3].filter((v) => v !== null && v !== undefined).map((v) => Number(v).toFixed(1)).join(', '), 'A'],
-          ['Line PFs (PF1,PF2,PF3)', [latestReading.pf1, latestReading.pf2, latestReading.pf3].filter((v) => v !== null && v !== undefined).map((v) => Number(v).toFixed(3)).join(', '), '—'],
-          ['3φ Active Power', latestReading.active_power ?? '—', 'kW'],
-          ['3φ Reactive Power', latestReading.reactive_power ?? '—', 'kVAr'],
-          ['3φ Apparent Power', latestReading.apparent_power ?? '—', 'kVA'],
-          ['3φ Power Factor', latestReading.power_factor ?? '—', '—'],
-          ['THD (Voltage)', latestReading.thd_voltage ?? '—', '%'],
-          ['THD (Current)', latestReading.thd_current ?? '—', '%'],
+          ['Frequency', formatScalar(latestTransformer?.frequency, 2), 'Hz'],
+          ['Phase Voltages (V1, V2, V3)', formatTriple([latestReading.voltage1, latestReading.voltage2, latestReading.voltage3], 2), 'V'],
+          ['Line Currents (A1, A2, A3)', formatTriple([latestReading.current1, latestReading.current2, latestReading.current3], 2), 'A'],
+          ['Active Power (kW1, kW2, kW3)', formatTriple([latestReading.kw1, latestReading.kw2, latestReading.kw3], 3), 'kW'],
+          ['Power Factor (PF1, PF2, PF3)', formatTriple([latestReading.pf1, latestReading.pf2, latestReading.pf3], 3), '—'],
+          ['3φ Active Power (kWIII)', formatScalar(latestReading.active_power, 3), 'kW'],
+          ['3φ Apparent Power (kVAIII)', formatScalar(latestReading.apparent_power, 3), 'kVA'],
+          ['3φ Reactive Power (kVARIII)', formatScalar(latestReading.reactive_power, 3), 'kVAR'],
+          ['3φ Power Factor (PFIII)', formatScalar(latestReading.power_factor, 3), '—'],
         ];
 
         paramTableBody.innerHTML = rows.map(([metric, value, unit]) => `<tr><td>${metric}</td><td class="font-bold">${value ?? '—'}</td><td>${unit}</td></tr>`).join('');

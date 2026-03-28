@@ -52,34 +52,24 @@ class DummyDataSeeder extends Seeder
             ],
         ];
 
-        $buildingPresets = [
-            'COE' => ['name' => 'BLDG1: COE', 'series_key' => 'COE', 'kwh_target' => 80, 'online' => true],
-            'SET' => ['name' => 'BLDG2: SET', 'series_key' => 'CCS', 'kwh_target' => 60, 'online' => true],
-            'CSM' => ['name' => 'BLDG3: CSM', 'series_key' => 'CSM', 'kwh_target' => 50, 'online' => true],
-            'CCS' => ['name' => 'BLDG4: CCS', 'series_key' => 'CCS', 'kwh_target' => 70, 'online' => true],
-            'PRISM' => ['name' => 'BLDG5: PRISM', 'series_key' => 'CEBA', 'kwh_target' => 100, 'online' => true],
-            'CEBA' => ['name' => 'College of Economics and Business Administration', 'series_key' => 'CEBA', 'kwh_target' => 55, 'online' => true],
-            'CED' => ['name' => 'College of Education', 'series_key' => 'CED', 'kwh_target' => 65, 'online' => true],
-            'CON' => ['name' => 'College of Nursing', 'series_key' => 'CON', 'kwh_target' => 45, 'online' => true],
-        ];
+        $defaultPreset = ['series_key' => 'COE', 'kwh_target' => 60, 'online' => true];
 
         $today = Carbon::today(config('app.timezone'));
 
-        foreach ($buildingPresets as $code => $preset) {
+        foreach (Building::query()->orderBy('code')->get() as $building) {
+            if (! $building instanceof Building) {
+                continue;
+            }
+
+            $code = $building->code;
+            $preset = $buildingPresets[$code] ?? $defaultPreset;
             $series = $seriesTemplates[$preset['series_key']] ?? $seriesTemplates['COE'];
 
-            $building = Building::updateOrCreate(
-                ['code' => $code],
-                [
-                    'name' => $preset['name'],
-                    'is_online' => $preset['online'],
-                ]
-            );
-
-            $meter = $building->meters()->updateOrCreate(
-                ['meter_code' => $code.'-MAIN'],
-                ['label' => $code.' Main']
-            );
+            $meter = $building->meters()->first()
+                ?? $building->meters()->updateOrCreate(
+                    ['meter_code' => $code.'-MTR-1'],
+                    ['label' => 'Main Panel - '.$code]
+                );
 
             $kwhPerSlot = ($preset['kwh_target'] ?? 60) / max(count($timeSlots), 1);
 
@@ -145,7 +135,7 @@ class DummyDataSeeder extends Seeder
 
         foreach ($transformerSamples as $sample) {
             $recordedAt = Carbon::parse($sample['timestamp'], config('app.timezone'));
-            $meter = Meter::query()->where('meter_code', 'COE-MAIN')->first()
+            $meter = Meter::query()->where('meter_code', 'COE-MTR-1')->first()
                 ?? Meter::query()->inRandomOrder()->first();
             $kwiii = round((float) $sample['load'], 3);
             $kw1 = round($kwiii * 0.34, 3);

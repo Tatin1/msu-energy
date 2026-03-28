@@ -25,8 +25,7 @@ export const mountParametersRealtime = () => {
     return;
   }
 
-  window.Echo.channel('building.logs').listen('BuildingLogRecorded', queueRefresh);
-  window.Echo.channel('transformers.overview').listen('TransformerLogRecorded', queueRefresh);
+  window.Echo.channel('dashboard.metrics').listen('.ReadingIngested', queueRefresh);
 
   isMounted = true;
 };
