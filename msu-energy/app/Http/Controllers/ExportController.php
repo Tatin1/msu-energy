@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BuildingLog;
+use App\Models\Reading;
 use App\Models\SystemLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -45,22 +45,25 @@ class ExportController extends Controller
 
         $maxRows = $validated['max_rows'] ?? 1000;
 
-        $query = BuildingLog::query()
-            ->orderByDesc('date')
-            ->orderByDesc('time');
+        $query = Reading::query()
+            ->with(['meter.building:id,code'])
+            ->whereNotNull('recorded_at')
+            ->orderByDesc('recorded_at');
 
         if (!empty($validated['building'])) {
-            $query->where('building', $validated['building']);
+            $query->whereHas('meter.building', function ($buildingQuery) use ($validated) {
+                $buildingQuery->where('code', $validated['building']);
+            });
         }
 
         if (!empty($validated['date'])) {
-            $query->whereDate('date', Carbon::parse($validated['date'])->toDateString());
+            $query->whereDate('recorded_at', Carbon::parse($validated['date'])->toDateString());
         } else {
             if (!empty($validated['start_date'])) {
-                $query->whereDate('date', '>=', Carbon::parse($validated['start_date'])->toDateString());
+                $query->whereDate('recorded_at', '>=', Carbon::parse($validated['start_date'])->toDateString());
             }
             if (!empty($validated['end_date'])) {
-                $query->whereDate('date', '<=', Carbon::parse($validated['end_date'])->toDateString());
+                $query->whereDate('recorded_at', '<=', Carbon::parse($validated['end_date'])->toDateString());
             }
         }
 
@@ -71,30 +74,70 @@ class ExportController extends Controller
                 (object) [
                     'id' => 1,
                     'building' => 'SAMPLE',
+                    'meter' => 'SAMPLE-MTR-1',
                     'date' => '2025-10-25',
                     'time' => '08:15',
-                    'time_ed' => '08:30',
-                    'f' => 60,
+                    'time_ed' => null,
+                    'f' => null,
                     'v1' => 230,
                     'v2' => 228,
                     'v3' => 231,
                     'a1' => 12.4,
                     'a2' => 11.8,
                     'a3' => 13.0,
+                    'kw1' => 18.1,
+                    'kw2' => 17.5,
+                    'kw3' => 17.8,
                     'pf1' => 0.92,
                     'pf2' => 0.94,
                     'pf3' => 0.91,
+                    'kwiii' => 53.4,
+                    'kvaiii' => 58.0,
+                    'kvariii' => 22.7,
+                    'pfiii' => 0.92,
                     'kwh' => 128.3,
+                    'cost' => 1539.6,
                 ],
             ]);
         }
 
         $rows = $buildingData->map(function ($row) {
-            $payload = $row instanceof BuildingLog ? $row->toArray() : (array) $row;
+            if ($row instanceof Reading) {
+                $recordedAt = $row->recorded_at ? Carbon::parse($row->recorded_at) : null;
+
+                return [
+                    'id' => $row->id,
+                    'meter' => $row->meter?->meter_code,
+                    'date' => $recordedAt?->toDateString(),
+                    'time' => $recordedAt?->format('H:i:s'),
+                    'time_ed' => null,
+                    'f' => null,
+                    'v1' => $row->voltage1,
+                    'v2' => $row->voltage2,
+                    'v3' => $row->voltage3,
+                    'a1' => $row->current1,
+                    'a2' => $row->current2,
+                    'a3' => $row->current3,
+                    'kw1' => $row->kw1,
+                    'kw2' => $row->kw2,
+                    'kw3' => $row->kw3,
+                    'pf1' => $row->pf1,
+                    'pf2' => $row->pf2,
+                    'pf3' => $row->pf3,
+                    'kwiii' => $row->active_power,
+                    'kvaiii' => $row->apparent_power,
+                    'kvariii' => $row->reactive_power,
+                    'pfiii' => $row->power_factor,
+                    'kwh' => $row->kwh,
+                    'cost' => $row->cost,
+                ];
+            }
+
+            $payload = (array) $row;
 
             return [
                 'id' => $payload['id'] ?? null,
-                'building' => $payload['building'] ?? null,
+                'meter' => $payload['meter'] ?? null,
                 'date' => $payload['date'] ?? null,
                 'time' => $payload['time'] ?? null,
                 'time_ed' => $payload['time_ed'] ?? null,
@@ -105,21 +148,29 @@ class ExportController extends Controller
                 'a1' => $payload['a1'] ?? null,
                 'a2' => $payload['a2'] ?? null,
                 'a3' => $payload['a3'] ?? null,
+                'kw1' => $payload['kw1'] ?? null,
+                'kw2' => $payload['kw2'] ?? null,
+                'kw3' => $payload['kw3'] ?? null,
                 'pf1' => $payload['pf1'] ?? null,
                 'pf2' => $payload['pf2'] ?? null,
                 'pf3' => $payload['pf3'] ?? null,
+                'kwiii' => $payload['kwiii'] ?? null,
+                'kvaiii' => $payload['kvaiii'] ?? null,
+                'kvariii' => $payload['kvariii'] ?? null,
+                'pfiii' => $payload['pfiii'] ?? null,
                 'kwh' => $payload['kwh'] ?? null,
+                'cost' => $payload['cost'] ?? null,
             ];
         });
 
         // === Stream CSV ===
         $callback = function() use ($rows) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['ID','BUILDING','DATE','TIME','TIMEed','F','V1','V2','V3','A1','A2','A3','PF1','PF2','PF3','kWh']);
+            fputcsv($file, ['ID','METER','DATE','TIME','TIMEed','F','V1','V2','V3','A1','A2','A3','KW1','KW2','KW3','PF1','PF2','PF3','KWIII','KVAIII','KVARIII','PFIII','KWHIII','COST']);
             foreach ($rows as $row) {
                 fputcsv($file, [
                     $row['id'],
-                    $row['building'],
+                    $row['meter'],
                     $row['date'],
                     $row['time'],
                     $row['time_ed'],
@@ -130,10 +181,18 @@ class ExportController extends Controller
                     $row['a1'],
                     $row['a2'],
                     $row['a3'],
+                    $row['kw1'],
+                    $row['kw2'],
+                    $row['kw3'],
                     $row['pf1'],
                     $row['pf2'],
                     $row['pf3'],
+                    $row['kwiii'],
+                    $row['kvaiii'],
+                    $row['kvariii'],
+                    $row['pfiii'],
                     $row['kwh'],
+                    $row['cost'],
                 ]);
             }
             fclose($file);
@@ -206,6 +265,7 @@ class ExportController extends Controller
                 (object) [
                     'id' => 1,
                     'building' => 'SYSTEM',
+                    'meter' => 'SYSTEM',
                     'date' => '2025-10-25',
                     'time' => '08:15',
                     'time_ed' => '08:30',
@@ -223,6 +283,7 @@ class ExportController extends Controller
             return [
                 'id' => $payload['id'] ?? null,
                 'building' => $payload['building'] ?? null,
+                'meter' => $payload['building'] ?? null,
                 'date' => $payload['date'] ?? null,
                 'time' => $payload['time'] ?? null,
                 'time_ed' => $payload['time_ed'] ?? null,
@@ -236,11 +297,11 @@ class ExportController extends Controller
         // === Stream CSV ===
         $callback = function() use ($rows) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['ID','BUILDING','DATE','TIME','TIMEed','TOTAL_KW','TOTAL_KVAR','TOTAL_KVA','TOTAL_PF']);
+            fputcsv($file, ['ID','METER','DATE','TIME','TIMEed','TOTAL_KW','TOTAL_KVAR','TOTAL_KVA','TOTAL_PF']);
             foreach ($rows as $row) {
                 fputcsv($file, [
                     $row['id'],
-                    $row['building'],
+                    $row['meter'],
                     $row['date'],
                     $row['time'],
                     $row['time_ed'],

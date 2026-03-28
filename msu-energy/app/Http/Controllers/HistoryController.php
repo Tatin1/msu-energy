@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\BuildingLog;
+use App\Models\Reading;
 use App\Models\SystemLog;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -22,45 +22,59 @@ class HistoryController extends Controller
 
         $perPage = $validated['per_page'] ?? 50;
 
-        $query = BuildingLog::query()
-            ->orderByDesc('date')
-            ->orderByDesc('time');
+        $query = Reading::query()
+            ->with(['meter.building:id,code'])
+            ->whereNotNull('recorded_at')
+            ->orderByDesc('recorded_at');
 
         if (!empty($validated['building'])) {
-            $query->where('building', $validated['building']);
+            $query->whereHas('meter.building', function ($buildingQuery) use ($validated) {
+                $buildingQuery->where('code', $validated['building']);
+            });
         }
 
         if (!empty($validated['date'])) {
-            $query->whereDate('date', Carbon::parse($validated['date'])->toDateString());
+            $query->whereDate('recorded_at', Carbon::parse($validated['date'])->toDateString());
         } else {
             if (!empty($validated['start_date'])) {
-                $query->whereDate('date', '>=', Carbon::parse($validated['start_date'])->toDateString());
+                $query->whereDate('recorded_at', '>=', Carbon::parse($validated['start_date'])->toDateString());
             }
             if (!empty($validated['end_date'])) {
-                $query->whereDate('date', '<=', Carbon::parse($validated['end_date'])->toDateString());
+                $query->whereDate('recorded_at', '<=', Carbon::parse($validated['end_date'])->toDateString());
             }
         }
 
         $paginator = $query->paginate($perPage);
 
-        $data = collect($paginator->items())->map(function (BuildingLog $log) {
+        $data = collect($paginator->items())->map(function (Reading $log) {
+            $recordedAt = $log->recorded_at ? Carbon::parse($log->recorded_at) : null;
+
             return [
                 'id' => $log->id,
-                'building' => $log->building,
-                'date' => $log->date,
-                'time' => $log->time,
-                'time_ed' => $log->time_ed,
-                'f' => $log->f,
-                'v1' => $log->v1,
-                'v2' => $log->v2,
-                'v3' => $log->v3,
-                'a1' => $log->a1,
-                'a2' => $log->a2,
-                'a3' => $log->a3,
+                'building' => $log->meter?->building?->code,
+                'meter' => $log->meter?->meter_code,
+                'date' => $recordedAt?->toDateString(),
+                'time' => $recordedAt?->format('H:i:s'),
+                'time_ed' => null,
+                'f' => null,
+                'v1' => $log->voltage1,
+                'v2' => $log->voltage2,
+                'v3' => $log->voltage3,
+                'a1' => $log->current1,
+                'a2' => $log->current2,
+                'a3' => $log->current3,
+                'kw1' => $log->kw1,
+                'kw2' => $log->kw2,
+                'kw3' => $log->kw3,
                 'pf1' => $log->pf1,
                 'pf2' => $log->pf2,
                 'pf3' => $log->pf3,
+                'kwiii' => $log->active_power,
+                'kvaiii' => $log->apparent_power,
+                'kvariii' => $log->reactive_power,
+                'pfiii' => $log->power_factor,
                 'kwh' => $log->kwh,
+                'cost' => $log->cost,
             ];
         });
 
@@ -112,6 +126,7 @@ class HistoryController extends Controller
             return [
                 'id' => $log->id,
                 'building' => $log->building,
+                'meter' => $log->building,
                 'date' => $log->date,
                 'time' => $log->time,
                 'time_ed' => $log->time_ed,

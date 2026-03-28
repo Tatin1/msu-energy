@@ -46,7 +46,7 @@
                 <thead class="bg-gray-100 font-semibold">
                     <tr>
                         <th class="border px-3 py-2">ID</th>
-                        <th class="border px-3 py-2">Building</th>
+                        <th class="border px-3 py-2">Meter</th>
                         <th class="border px-3 py-2">DATE</th>
                         <th class="border px-3 py-2">TIME</th>
                         <th class="border px-3 py-2">TIMEₑd</th>
@@ -57,35 +57,51 @@
                         <th class="border px-3 py-2">A1</th>
                         <th class="border px-3 py-2">A2</th>
                         <th class="border px-3 py-2">A3</th>
+                        <th class="border px-3 py-2">KW1</th>
+                        <th class="border px-3 py-2">KW2</th>
+                        <th class="border px-3 py-2">KW3</th>
                         <th class="border px-3 py-2">PF1</th>
                         <th class="border px-3 py-2">PF2</th>
                         <th class="border px-3 py-2">PF3</th>
-                        <th class="border px-3 py-2">kWh</th>
+                        <th class="border px-3 py-2">KWIII</th>
+                        <th class="border px-3 py-2">KVAIII</th>
+                        <th class="border px-3 py-2">KVARIII</th>
+                        <th class="border px-3 py-2">PFIII</th>
+                        <th class="border px-3 py-2">KWHIII</th>
+                        <th class="border px-3 py-2">Cost</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse(($historyBuildingLogs ?? collect()) as $log)
-                        <tr class="hover:bg-gray-50" data-building="{{ $log->building ?? $log->id }}" data-date="{{ optional($log->date)->toDateString() ?? '—' }}">
+                        <tr class="hover:bg-gray-50" data-building="{{ $log->meter?->building?->code ?? '—' }}" data-date="{{ optional($log->recorded_at)->toDateString() ?? '—' }}">
                             <td class="border px-3 py-2">{{ $log->id }}</td>
-                            <td class="border px-3 py-2">{{ $log->building ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->date ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->time ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->time_ed ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->f ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->v1 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->v2 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->v3 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->a1 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->a2 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->a3 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->meter?->meter_code ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->toDateString() ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ optional($log->recorded_at)->format('H:i:s') ?? '—' }}</td>
+                            <td class="border px-3 py-2">—</td>
+                            <td class="border px-3 py-2">—</td>
+                            <td class="border px-3 py-2">{{ $log->voltage1 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->voltage2 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->voltage3 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->current1 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->current2 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->current3 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->kw1 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->kw2 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->kw3 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->pf1 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->pf2 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->pf3 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->active_power ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->apparent_power ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->reactive_power ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->power_factor ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->kwh ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->cost ?? '—' }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="16" class="border px-3 py-4 text-center text-gray-500">No building logs available yet.</td>
+                            <td colspan="24" class="border px-3 py-4 text-center text-gray-500">No building logs available yet.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -104,7 +120,7 @@
             </label>
 
             <label class="flex items-center gap-2">
-                <span class="font-medium">Building:</span>
+                <span class="font-medium">Meter:</span>
                 <select id="system-building-select" class="border rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-maroon">
                     <option value="">All</option>
                     @foreach(($historyBuildings ?? collect()) as $building)
@@ -123,7 +139,7 @@
                 <thead class="bg-gray-100 font-semibold">
                     <tr>
                         <th class="border px-3 py-2">ID</th>
-                        <th class="border px-3 py-2">Building</th>
+                        <th class="border px-3 py-2">Meter</th>
                         <th class="border px-3 py-2">DATE</th>
                         <th class="border px-3 py-2">TIME</th>
                         <th class="border px-3 py-2">TIMEₑd</th>
@@ -224,7 +240,7 @@
             systemEndpoint: "{{ url('/api/history/system-logs') }}",
             exportBuildingRoute: "{{ route('export.building') }}",
             exportSystemRoute: "{{ route('export.system') }}",
-            buildingColumns: 16,
+            buildingColumns: 24,
             systemColumns: 9,
             perPage: 50,
         };
@@ -296,7 +312,7 @@
                 return `
                     <tr class="hover:bg-gray-50" data-building="${escapeHtml(buildingValue)}" data-date="${escapeHtml(dateValue)}">
                         <td class="border px-3 py-2">${formatCell(row.id)}</td>
-                        <td class="border px-3 py-2">${formatCell(buildingValue)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.meter)}</td>
                         <td class="border px-3 py-2">${formatCell(dateValue)}</td>
                         <td class="border px-3 py-2">${formatCell(row.time)}</td>
                         <td class="border px-3 py-2">${formatCell(row.time_ed)}</td>
@@ -307,10 +323,18 @@
                         <td class="border px-3 py-2">${formatCell(row.a1)}</td>
                         <td class="border px-3 py-2">${formatCell(row.a2)}</td>
                         <td class="border px-3 py-2">${formatCell(row.a3)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.kw1)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.kw2)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.kw3)}</td>
                         <td class="border px-3 py-2">${formatCell(row.pf1)}</td>
                         <td class="border px-3 py-2">${formatCell(row.pf2)}</td>
                         <td class="border px-3 py-2">${formatCell(row.pf3)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.kwiii)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.kvaiii)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.kvariii)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.pfiii)}</td>
                         <td class="border px-3 py-2">${formatCell(row.kwh)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.cost)}</td>
                     </tr>
                 `;
             }).join('');
@@ -323,13 +347,13 @@
             }
 
             systemTableBody.innerHTML = rows.map((row) => {
-                const buildingValue = row.building ?? 'System';
+                const buildingValue = row.building ?? row.meter ?? 'System';
                 const dateValue = row.date ?? '—';
 
                 return `
                     <tr class="hover:bg-gray-50" data-building="${escapeHtml(buildingValue)}" data-date="${escapeHtml(dateValue)}">
                         <td class="border px-3 py-2">${formatCell(row.id)}</td>
-                        <td class="border px-3 py-2">${formatCell(buildingValue)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.meter ?? buildingValue)}</td>
                         <td class="border px-3 py-2">${formatCell(dateValue)}</td>
                         <td class="border px-3 py-2">${formatCell(row.time)}</td>
                         <td class="border px-3 py-2">${formatCell(row.time_ed)}</td>

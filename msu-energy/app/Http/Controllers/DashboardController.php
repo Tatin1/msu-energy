@@ -248,9 +248,10 @@ class DashboardController extends Controller
                 'name' => $building->name,
             ]);
 
-        $buildingLogs = BuildingLog::query()
-            ->orderByDesc('date')
-            ->orderByDesc('time')
+        $buildingLogs = Reading::query()
+            ->with(['meter.building:id,code'])
+            ->whereNotNull('recorded_at')
+            ->orderByDesc('recorded_at')
             ->limit(50)
             ->get();
 

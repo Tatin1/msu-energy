@@ -65,7 +65,7 @@ const renderBuildingHistory = (tbody, rows = []) => {
   }
 
   if (!rows.length) {
-    setEmptyRow(tbody, 'No building logs match the current filters.', 16);
+    setEmptyRow(tbody, 'No building logs match the current filters.', 24);
     return;
   }
 
@@ -76,7 +76,7 @@ const renderBuildingHistory = (tbody, rows = []) => {
     return `
       <tr class="hover:bg-gray-50" data-building="${escapeHtml(buildingValue)}" data-date="${escapeHtml(dateValue)}">
         <td class="border px-3 py-2">${formatCell(row.id)}</td>
-        <td class="border px-3 py-2">${formatCell(buildingValue)}</td>
+        <td class="border px-3 py-2">${formatCell(row.meter)}</td>
         <td class="border px-3 py-2">${formatCell(dateValue)}</td>
         <td class="border px-3 py-2">${formatCell(row.time)}</td>
         <td class="border px-3 py-2">${formatCell(row.time_ed)}</td>
@@ -87,10 +87,18 @@ const renderBuildingHistory = (tbody, rows = []) => {
         <td class="border px-3 py-2">${formatCell(row.a1)}</td>
         <td class="border px-3 py-2">${formatCell(row.a2)}</td>
         <td class="border px-3 py-2">${formatCell(row.a3)}</td>
+        <td class="border px-3 py-2">${formatCell(row.kw1)}</td>
+        <td class="border px-3 py-2">${formatCell(row.kw2)}</td>
+        <td class="border px-3 py-2">${formatCell(row.kw3)}</td>
         <td class="border px-3 py-2">${formatCell(row.pf1)}</td>
         <td class="border px-3 py-2">${formatCell(row.pf2)}</td>
         <td class="border px-3 py-2">${formatCell(row.pf3)}</td>
+        <td class="border px-3 py-2">${formatCell(row.kwiii)}</td>
+        <td class="border px-3 py-2">${formatCell(row.kvaiii)}</td>
+        <td class="border px-3 py-2">${formatCell(row.kvariii)}</td>
+        <td class="border px-3 py-2">${formatCell(row.pfiii)}</td>
         <td class="border px-3 py-2">${formatCell(row.kwh)}</td>
+        <td class="border px-3 py-2">${formatCell(row.cost)}</td>
       </tr>
     `;
   }).join('');
@@ -108,13 +116,13 @@ const renderSystemHistory = (tbody, rows = []) => {
   }
 
   tbody.innerHTML = rows.map((row) => {
-    const buildingValue = row.building ?? 'System';
+    const buildingValue = row.building ?? row.meter ?? 'System';
     const dateValue = row.date ?? '—';
 
     return `
       <tr class="hover:bg-gray-50" data-building="${escapeHtml(buildingValue)}" data-date="${escapeHtml(dateValue)}">
         <td class="border px-3 py-2">${formatCell(row.id)}</td>
-        <td class="border px-3 py-2">${formatCell(buildingValue)}</td>
+        <td class="border px-3 py-2">${formatCell(row.meter ?? buildingValue)}</td>
         <td class="border px-3 py-2">${formatCell(dateValue)}</td>
         <td class="border px-3 py-2">${formatCell(row.time)}</td>
         <td class="border px-3 py-2">${formatCell(row.time_ed)}</td>
@@ -131,6 +139,8 @@ const renderSystemHistory = (tbody, rows = []) => {
 export const mountHistoryRealtime = () => {
   const buildingBody = document.querySelector('#building-table tbody');
   const systemBody = document.querySelector('#system-table tbody');
+  const buildingSelect = document.getElementById('building-select');
+  const buildingDate = document.getElementById('building-date');
 
   if (!buildingBody && !systemBody) {
     return;
@@ -141,8 +151,33 @@ export const mountHistoryRealtime = () => {
   }
 
   if (buildingBody) {
-    window.Echo.channel('building.logs')
-      .listen('.BuildingLogRecorded', ({ payload }) => renderBuildingHistory(buildingBody, payload ?? []));
+    const refreshBuildingHistory = async () => {
+      const params = new URLSearchParams();
+      if (buildingSelect?.value) {
+        params.set('building', buildingSelect.value);
+      }
+      if (buildingDate?.value) {
+        params.set('date', buildingDate.value);
+      }
+      params.set('per_page', '50');
+
+      try {
+        const response = await fetch(`/api/history/building-logs?${params.toString()}`, {
+          headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error('Unable to refresh building history');
+        }
+
+        const payload = await response.json();
+        renderBuildingHistory(buildingBody, payload.data ?? []);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    window.Echo.channel('dashboard.metrics')
+      .listen('.ReadingIngested', () => refreshBuildingHistory());
   }
 
   if (systemBody) {
