@@ -67,7 +67,7 @@ class IoTIngestionTest extends TestCase
 
         $this->assertDatabaseHas('readings', [
             'meter_id' => $this->meter->id,
-            'kwh' => $payload['kwh'],
+            'kwhiii' => $payload['kwhiii'],
         ]);
     }
 
@@ -134,7 +134,7 @@ class IoTIngestionTest extends TestCase
             'frequency' => 60.02,
             'v1' => 230.12,
             'a1' => 12.5,
-            'pf' => 0.94,
+            'pfiii' => 0.94,
             'kwh' => 15.25,
         ];
 
@@ -142,7 +142,7 @@ class IoTIngestionTest extends TestCase
             ->assertNoContent();
 
         $this->assertDatabaseHas('transformer_logs', [
-            'pf' => 0.94,
+            'pfiii' => 0.94,
             'frequency' => 60.02,
         ]);
     }
@@ -152,10 +152,10 @@ class IoTIngestionTest extends TestCase
         return [
             'meter_code' => $this->meter->meter_code,
             'recorded_at' => now()->toIso8601String(),
-            'voltage1' => 229.4,
-            'current1' => 12.5,
-            'power_factor' => 0.97,
-            'kwh' => 12345.678,
+            'v1' => 229.4,
+            'a1' => 12.5,
+            'pfiii' => 0.97,
+            'kwhiii' => 12345.678,
         ];
     }
 

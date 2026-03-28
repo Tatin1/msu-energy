@@ -43,14 +43,14 @@ class BillingSnapshot
         $sumInRange = function (Carbon $start, Carbon $end) use ($baseReadings): float {
             return (float) (clone $baseReadings)
                 ->whereBetween('readings.recorded_at', [$start, $end])
-                ->sum('readings.kwh');
+                ->sum('readings.kwhiii');
         };
 
         $avgPfInRange = function (Carbon $start, Carbon $end) use ($baseReadings): ?float {
             return (clone $baseReadings)
                 ->whereBetween('readings.recorded_at', [$start, $end])
-                ->whereNotNull('readings.power_factor')
-                ->avg('readings.power_factor');
+                ->whereNotNull('readings.pfiii')
+                ->avg('readings.pfiii');
         };
 
         $summaryKwh = $sumInRange($rangeStart, $rangeEnd);
@@ -75,14 +75,14 @@ class BillingSnapshot
         $perBuildingCurrent = (clone $baseReadings)
             ->whereBetween('readings.recorded_at', [$rangeStart, $rangeEnd])
             ->groupBy('meters.building_id')
-            ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwh), 0) as total_kwh, AVG(readings.power_factor) as avg_pf')
+            ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwhiii), 0) as total_kwh, AVG(readings.pfiii) as avg_pf')
             ->get()
             ->keyBy('building_id');
 
         $perBuildingPrevious = (clone $baseReadings)
             ->whereBetween('readings.recorded_at', [$previousStart, $previousEnd])
             ->groupBy('meters.building_id')
-            ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwh), 0) as total_kwh')
+            ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
             ->get()
             ->keyBy('building_id');
 
@@ -124,7 +124,7 @@ class BillingSnapshot
     {
         return (clone $baseReadings)
             ->whereBetween('readings.recorded_at', [$start, $end])
-            ->selectRaw('DATE(readings.recorded_at) as bucket, COALESCE(SUM(readings.kwh), 0) as total_kwh')
+            ->selectRaw('DATE(readings.recorded_at) as bucket, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
             ->groupBy('bucket')
             ->orderBy('bucket')
             ->get()
@@ -133,7 +133,7 @@ class BillingSnapshot
 
                 return [
                     'label' => $labelDate->format('M d'),
-                    'kwh' => round((float) $row->total_kwh, 3),
+                    'kwhiii' => round((float) $row->total_kwh, 3),
                 ];
             })
             ->values()

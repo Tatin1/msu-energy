@@ -63,14 +63,14 @@ async function renderParameters(){
   const latest = rows[0];
   // table rows
   const tbody = document.querySelector('#paramTable tbody');
-  const S3 = ((latest.voltage1||230) * (latest.current1||28) + (latest.voltage2||231)*(latest.current2||29) + (latest.voltage3||229)*(latest.current3||30))/1000;
-  const P3 = (latest.active_power || S3 * (latest.power_factor || 0.95));
+  const S3 = ((latest.v1||230) * (latest.a1||28) + (latest.v2||231)*(latest.a2||29) + (latest.v3||229)*(latest.a3||30))/1000;
+  const P3 = (latest.kwiii || S3 * (latest.pfiii || 0.95));
   const Q3 = Math.sqrt(Math.max(0, S3*S3 - P3*P3));
   const rowsData = [
     ['Frequency', (latest.frequency ?? 60).toFixed(2), 'Hz'],
-    ['Phase Voltages (V1, V2, V3)', `${(latest.voltage1||230).toFixed(1)}, ${(latest.voltage2||231).toFixed(1)}, ${(latest.voltage3||229).toFixed(1)}`, 'V'],
-    ['Line Currents (A1, A2, A3)', `${(latest.current1||28).toFixed(1)}, ${(latest.current2||29).toFixed(1)}, ${(latest.current3||30).toFixed(1)}`, 'A'],
-    ['Power Factor', (latest.power_factor||0.95).toFixed(3), '—'],
+    ['Phase Voltages (V1, V2, V3)', `${(latest.v1||230).toFixed(1)}, ${(latest.v2||231).toFixed(1)}, ${(latest.v3||229).toFixed(1)}`, 'V'],
+    ['Line Currents (A1, A2, A3)', `${(latest.a1||28).toFixed(1)}, ${(latest.a2||29).toFixed(1)}, ${(latest.a3||30).toFixed(1)}`, 'A'],
+    ['Power Factor', (latest.pfiii||0.95).toFixed(3), '—'],
     ['Transformer 3φ Active Power', P3.toFixed(2), 'kW'],
     ['Transformer 3φ Reactive Power', Q3.toFixed(2), 'kVAr'],
     ['Transformer 3φ Apparent Power', S3.toFixed(2), 'kVA'],
@@ -79,13 +79,13 @@ async function renderParameters(){
   ];
   tbody.innerHTML = rowsData.map(r=>`<tr><td>${r[0]}</td><td><strong>${r[1]}</strong></td><td>${r[2]}</td></tr>`).join('');
   // chart of recent kWh values
-  const data = rows.slice(0,12).reverse().map(r=>Number(r.kwh || 0));
+  const data = rows.slice(0,12).reverse().map(r=>Number(r.kwhiii || 0));
   const ctx = document.getElementById('paramEnergyChart');
   if(window.paramEnergyChart) window.paramEnergyChart.destroy();
   window.paramEnergyChart = new Chart(ctx,{ type:'line', data:{ labels:data.map((_,i)=>i+1), datasets:[{ label: `Meter ${meterId}`, data, fill:true, tension:.3, backgroundColor:'#a11d1d22', borderColor:'#a11d1d' }]}, options:{scales:{y:{beginAtZero:true}}}});
   // set KPIs
-  document.getElementById('paramLastMonth').textContent = fmtInt.format(latest.kwh || 0);
-  document.getElementById('paramThisMonth').textContent = fmtInt.format(latest.kwh || 0);
+  document.getElementById('paramLastMonth').textContent = fmtInt.format(latest.kwhiii || 0);
+  document.getElementById('paramThisMonth').textContent = fmtInt.format(latest.kwhiii || 0);
 }
 
 document.getElementById('btnGetData')?.addEventListener('click', renderParameters);

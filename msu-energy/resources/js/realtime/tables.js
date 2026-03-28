@@ -50,7 +50,7 @@ const renderTransformerRows = (tbody, rows = []) => {
         <td class="px-4 py-2">${format(row.kvaiii, 3)}</td>
         <td class="px-4 py-2">${format(row.kvariii, 3)}</td>
         <td class="px-4 py-2">${format(row.pfiii, 3)}</td>
-        <td class="px-4 py-2">${format(row.kwh, 3)}</td>
+        <td class="px-4 py-2">${format(row.kwhiii, 3)}</td>
         <td class="px-4 py-2">${format(row.cost, 2)}</td>
       </tr>
     `;

@@ -97,7 +97,7 @@ const renderBuildingHistory = (tbody, rows = []) => {
         <td class="border px-3 py-2">${formatCell(row.kvaiii)}</td>
         <td class="border px-3 py-2">${formatCell(row.kvariii)}</td>
         <td class="border px-3 py-2">${formatCell(row.pfiii)}</td>
-        <td class="border px-3 py-2">${formatCell(row.kwh)}</td>
+        <td class="border px-3 py-2">${formatCell(row.kwhiii)}</td>
         <td class="border px-3 py-2">${formatCell(row.cost)}</td>
       </tr>
     `;

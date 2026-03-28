@@ -45,21 +45,21 @@ class DashboardController extends Controller
 
         $fifteenMinutesAgo = $now->copy()->subMinutes(15);
         $totalPower = (float) Reading::query()
-            ->whereNotNull('active_power')
+            ->whereNotNull('kwiii')
             ->whereBetween('recorded_at', [$fifteenMinutesAgo, $now])
-            ->sum('active_power');
+            ->sum('kwiii');
 
         $avgPF = (float) Reading::query()
-            ->whereNotNull('power_factor')
-            ->avg('power_factor');
+            ->whereNotNull('pfiii')
+            ->avg('pfiii');
 
         $lastMonthKwh = (float) Reading::query()
             ->whereBetween('recorded_at', [$previousStart, $previousEnd])
-            ->sum('kwh');
+            ->sum('kwhiii');
 
         $thisMonthKwh = (float) Reading::query()
             ->whereBetween('recorded_at', [$currentStart, $now])
-            ->sum('kwh');
+            ->sum('kwhiii');
 
         $lastMonthkW = $lastMonthKwh;
         $thisMonthkW = $thisMonthKwh;
@@ -97,21 +97,21 @@ class DashboardController extends Controller
 
         $fifteenMinutesAgo = $now->copy()->subMinutes(15);
         $totalPower = (float) Reading::query()
-            ->whereNotNull('active_power')
+            ->whereNotNull('kwiii')
             ->whereBetween('recorded_at', [$fifteenMinutesAgo, $now])
-            ->sum('active_power');
+            ->sum('kwiii');
 
         $avgPF = (float) Reading::query()
-            ->whereNotNull('power_factor')
-            ->avg('power_factor');
+            ->whereNotNull('pfiii')
+            ->avg('pfiii');
 
         $lastMonthKwh = (float) Reading::query()
             ->whereBetween('recorded_at', [$previousStart, $previousEnd])
-            ->sum('kwh');
+            ->sum('kwhiii');
 
         $thisMonthKwh = (float) Reading::query()
             ->whereBetween('recorded_at', [$currentStart, $now])
-            ->sum('kwh');
+            ->sum('kwhiii');
 
         $buildings = collect($labels)->map(function ($label, $index) use ($values, $prevValues) {
             $current = $values[$index] ?? 0;
@@ -224,12 +224,12 @@ class DashboardController extends Controller
             ->get();
 
         $parameters = [
-            ['key' => 'active_power', 'label' => 'Total Active Power (kW)'],
-            ['key' => 'reactive_power', 'label' => 'Total Reactive Power (kVAR)'],
-            ['key' => 'apparent_power', 'label' => 'Total Apparent Power (kVA)'],
-            ['key' => 'power_factor', 'label' => 'Power Factor'],
-            ['key' => 'voltage1', 'label' => 'Voltage Phase A (V)'],
-            ['key' => 'current1', 'label' => 'Current Phase A (A)'],
+            ['key' => 'kwiii',   'label' => 'Total Active Power (kW)'],
+            ['key' => 'kvariii', 'label' => 'Total Reactive Power (kVAR)'],
+            ['key' => 'kvaiii',  'label' => 'Total Apparent Power (kVA)'],
+            ['key' => 'pfiii',   'label' => 'Power Factor'],
+            ['key' => 'v1',      'label' => 'Voltage Phase A (V)'],
+            ['key' => 'a1',      'label' => 'Current Phase A (A)'],
         ];
 
         return view('pages.graphs', compact('buildings', 'parameters'));
@@ -290,9 +290,9 @@ class DashboardController extends Controller
 
         $realtimeStart = $now->copy()->subHours(23)->startOfHour();
         $realtimeReadings = Reading::query()
-            ->select('active_power', 'recorded_at')
+            ->select('kwiii', 'recorded_at')
             ->whereNotNull('recorded_at')
-            ->whereNotNull('active_power')
+            ->whereNotNull('kwiii')
             ->whereBetween('recorded_at', [$realtimeStart, $now])
             ->orderBy('recorded_at')
             ->get();
@@ -317,7 +317,7 @@ class DashboardController extends Controller
             $key = $bucketStart->format('Y-m-d H:00:00');
 
             $total = isset($realtimeBuckets[$key])
-                ? (float) $realtimeBuckets[$key]->sum('active_power')
+                ? (float) $realtimeBuckets[$key]->sum('kwiii')
                 : 0;
 
             return [
@@ -382,7 +382,7 @@ class DashboardController extends Controller
         $rawLoadSeries = Reading::query()
             ->join('meters', 'meters.id', '=', 'readings.meter_id')
             ->join('buildings', 'buildings.id', '=', 'meters.building_id')
-            ->selectRaw('buildings.code as label, COALESCE(SUM(readings.kwh), 0) as total_kwh')
+            ->selectRaw('buildings.code as label, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
             ->whereNotNull('readings.recorded_at')
             ->whereBetween('readings.recorded_at', [$loadWindowStart, $now])
             ->groupBy('buildings.code')
@@ -429,7 +429,7 @@ class DashboardController extends Controller
         return Reading::query()
             ->join('meters', 'meters.id', '=', 'readings.meter_id')
             ->join('buildings', 'buildings.id', '=', 'meters.building_id')
-            ->selectRaw('buildings.code as label, COALESCE(SUM(readings.kwh), 0) as total_kwh')
+            ->selectRaw('buildings.code as label, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
             ->whereNotNull('readings.recorded_at')
             ->whereBetween('readings.recorded_at', [$start, $end])
             ->groupBy('buildings.code')

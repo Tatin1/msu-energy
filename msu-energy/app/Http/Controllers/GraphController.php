@@ -10,12 +10,12 @@ use Illuminate\Http\Request;
 class GraphController extends Controller
 {
     private array $parameters = [
-        'active_power' => ['column' => 'active_power', 'label' => 'Total Active Power (kW)'],
-        'reactive_power' => ['column' => 'reactive_power', 'label' => 'Total Reactive Power (kVAR)'],
-        'apparent_power' => ['column' => 'apparent_power', 'label' => 'Total Apparent Power (kVA)'],
-        'power_factor' => ['column' => 'power_factor', 'label' => 'Power Factor'],
-        'voltage1' => ['column' => 'voltage1', 'label' => 'Voltage Phase A (V)'],
-        'current1' => ['column' => 'current1', 'label' => 'Current Phase A (A)'],
+        'kwiii'   => ['column' => 'kwiii',   'label' => 'Total Active Power (kW)'],
+        'kvariii' => ['column' => 'kvariii', 'label' => 'Total Reactive Power (kVAR)'],
+        'kvaiii'  => ['column' => 'kvaiii',  'label' => 'Total Apparent Power (kVA)'],
+        'pfiii'   => ['column' => 'pfiii',   'label' => 'Power Factor'],
+        'v1'      => ['column' => 'v1',      'label' => 'Voltage Phase A (V)'],
+        'a1'      => ['column' => 'a1',      'label' => 'Current Phase A (A)'],
     ];
 
     public function daily($meterId, $param, $date = null)

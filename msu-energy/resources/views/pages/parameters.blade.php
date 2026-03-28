@@ -129,7 +129,6 @@
         const meters = payload?.meters ?? [];
         const readingSource = meters.flatMap((meter) => meter.readings ?? []);
         const latestReading = readingSource.sort((a, b) => new Date(b.recorded_at) - new Date(a.recorded_at))[0] ?? null;
-        const latestTransformer = payload?.transformer_latest ?? null;
 
         if (!latestReading) {
           paramTableBody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500">No readings found for this building.</td></tr>';
@@ -157,15 +156,15 @@
         };
 
         const rows = [
-          ['Frequency', formatScalar(latestTransformer?.frequency, 2), 'Hz'],
-          ['Phase Voltages (V1, V2, V3)', formatTriple([latestReading.voltage1, latestReading.voltage2, latestReading.voltage3], 2), 'V'],
-          ['Line Currents (A1, A2, A3)', formatTriple([latestReading.current1, latestReading.current2, latestReading.current3], 2), 'A'],
+          ['Frequency', formatScalar(latestReading.frequency, 2), 'Hz'],
+          ['Phase Voltages (V1, V2, V3)', formatTriple([latestReading.v1, latestReading.v2, latestReading.v3], 2), 'V'],
+          ['Line Currents (A1, A2, A3)', formatTriple([latestReading.a1, latestReading.a2, latestReading.a3], 2), 'A'],
           ['Active Power (kW1, kW2, kW3)', formatTriple([latestReading.kw1, latestReading.kw2, latestReading.kw3], 3), 'kW'],
           ['Power Factor (PF1, PF2, PF3)', formatTriple([latestReading.pf1, latestReading.pf2, latestReading.pf3], 3), '—'],
-          ['3φ Active Power (kWIII)', formatScalar(latestReading.active_power, 3), 'kW'],
-          ['3φ Apparent Power (kVAIII)', formatScalar(latestReading.apparent_power, 3), 'kVA'],
-          ['3φ Reactive Power (kVARIII)', formatScalar(latestReading.reactive_power, 3), 'kVAR'],
-          ['3φ Power Factor (PFIII)', formatScalar(latestReading.power_factor, 3), '—'],
+          ['3φ Active Power (kWIII)', formatScalar(latestReading.kwiii, 3), 'kW'],
+          ['3φ Apparent Power (kVAIII)', formatScalar(latestReading.kvaiii, 3), 'kVA'],
+          ['3φ Reactive Power (kVARIII)', formatScalar(latestReading.kvariii, 3), 'kVAR'],
+          ['3φ Power Factor (PFIII)', formatScalar(latestReading.pfiii, 3), '—'],
         ];
 
         paramTableBody.innerHTML = rows.map(([metric, value, unit]) => `<tr><td>${metric}</td><td class="font-bold">${value ?? '—'}</td><td>${unit}</td></tr>`).join('');
@@ -224,7 +223,7 @@
         const previousMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).getMonth();
 
         const buckets = readings.reduce((carry, reading) => {
-          if (!reading?.kwh || !reading?.recorded_at) {
+          if (!reading?.kwhiii || !reading?.recorded_at) {
             return carry;
           }
           const recordedAt = new Date(reading.recorded_at);
@@ -233,7 +232,7 @@
           if (!carry[month]) {
             carry[month] = {};
           }
-          carry[month][day] = (carry[month][day] ?? 0) + Number(reading.kwh);
+          carry[month][day] = (carry[month][day] ?? 0) + Number(reading.kwhiii);
           return carry;
         }, {});
 

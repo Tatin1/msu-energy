@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\Building;
-use App\Models\TransformerLog;
-use Illuminate\Http\Request;
 
 class ReadingController extends Controller
 {
@@ -13,22 +11,7 @@ class ReadingController extends Controller
             ->with('meters.readings')
             ->firstOrFail();
 
-        $meterIds = $building->meters->pluck('id')->filter()->values();
-        $latestTransformer = null;
-
-        if ($meterIds->isNotEmpty()) {
-            $latestTransformer = TransformerLog::query()
-                ->whereIn('meter_id', $meterIds)
-                ->whereNotNull('recorded_at')
-                ->orderByDesc('recorded_at')
-                ->first();
-        }
-
         $payload = $building->toArray();
-        $payload['transformer_latest'] = $latestTransformer ? [
-            'recorded_at' => optional($latestTransformer->recorded_at)->toIso8601String(),
-            'frequency' => $latestTransformer->frequency,
-        ] : null;
 
         return response()->json($payload);
     }

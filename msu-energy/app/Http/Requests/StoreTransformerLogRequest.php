@@ -37,6 +37,7 @@ class StoreTransformerLogRequest extends FormRequest
             'kvariii' => ['nullable', 'numeric'],
             'pfiii' => ['nullable', 'numeric', 'between:-1,1'],
             'kwh' => ['nullable', 'numeric'],
+            'cost' => ['nullable', 'numeric', 'min:0'],
         ];
     }
 }

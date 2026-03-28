@@ -225,7 +225,7 @@
 
       function renderTrendChart() {
         const labels = state.trend.map(point => point.label);
-        const values = state.trend.map(point => point.kwh);
+        const values = state.trend.map(point => point.kwhiii);
 
         if (trendChart) trendChart.destroy();
 

@@ -80,23 +80,23 @@
                             <td class="border px-3 py-2">{{ optional($log->recorded_at)->format('H:i:s') ?? '—' }}</td>
                             <td class="border px-3 py-2">—</td>
                             <td class="border px-3 py-2">—</td>
-                            <td class="border px-3 py-2">{{ $log->voltage1 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->voltage2 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->voltage3 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->current1 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->current2 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->current3 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->v1 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->v2 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->v3 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->a1 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->a2 ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->a3 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->kw1 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->kw2 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->kw3 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->pf1 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->pf2 ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->pf3 ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->active_power ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->apparent_power ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->reactive_power ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->power_factor ?? '—' }}</td>
-                            <td class="border px-3 py-2">{{ $log->kwh ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->kwiii ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->kvaiii ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->kvariii ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->pfiii ?? '—' }}</td>
+                            <td class="border px-3 py-2">{{ $log->kwhiii ?? '—' }}</td>
                             <td class="border px-3 py-2">{{ $log->cost ?? '—' }}</td>
                         </tr>
                     @empty
@@ -333,7 +333,7 @@
                         <td class="border px-3 py-2">${formatCell(row.kvaiii)}</td>
                         <td class="border px-3 py-2">${formatCell(row.kvariii)}</td>
                         <td class="border px-3 py-2">${formatCell(row.pfiii)}</td>
-                        <td class="border px-3 py-2">${formatCell(row.kwh)}</td>
+                        <td class="border px-3 py-2">${formatCell(row.kwhiii)}</td>
                         <td class="border px-3 py-2">${formatCell(row.cost)}</td>
                     </tr>
                 `;
