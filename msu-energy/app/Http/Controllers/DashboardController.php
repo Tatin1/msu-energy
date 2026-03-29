@@ -199,6 +199,7 @@ class DashboardController extends Controller
             'summary' => $snapshot['summary'],
             'buildings' => $buildings,
             'chartConfig' => [
+                'rate' => $snapshot['rate'],
                 'buildings' => $snapshot['buildings'],
                 'trend' => $snapshot['trend'],
             ],

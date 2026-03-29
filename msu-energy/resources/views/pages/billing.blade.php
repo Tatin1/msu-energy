@@ -5,6 +5,7 @@
   $today = now()->timezone(config('app.timezone'));
   $defaultStart = $today->copy()->startOfMonth()->toDateString();
   $defaultEnd = $today->toDateString();
+  $tariffRate = $chartConfig['rate'] ?? 0;
 @endphp
 <section id="billing">
   <h1 class="text-3xl font-bold text-maroon mb-6">Billing Summary</h1>
@@ -28,7 +29,7 @@
 
     <div class="card text-center">
       <div class="kpi-label">Last Month Total Cost</div>
-      <div id="lastMonthCost" class="kpi">₱{{ isset($summary['last_month_kwh']) && isset($summary['rate']) ? number_format($summary['last_month_kwh'] * $summary['rate'], 2) : '0.00' }}</div>
+      <div id="lastMonthCost" class="kpi">₱{{ number_format($summary['last_month_cost'] ?? 0, 2) }}</div>
     </div>
 
     <div class="card text-center">
@@ -209,7 +210,7 @@
         const thisMonth = source?.this_month_kwh ?? 0;
         const lastMonth = source?.last_month_kwh ?? 0;
         const cost = source?.cost ?? source?.total_cost ?? 0;
-        const lastMonthCost = (lastMonth * state.tariffRate);
+        const lastMonthCost = source?.last_month_cost ?? 0;
         const avgPf = payload && payload.avg_pf !== null
           ? payload.avg_pf
           : (state.summary?.avg_pf ?? null);
@@ -366,6 +367,10 @@
       const applySnapshot = (snapshot) => {
         if (!snapshot) {
           return;
+        }
+
+        if (snapshot.rate !== undefined && snapshot.rate !== null) {
+          state.tariffRate = Number(snapshot.rate) || 0;
         }
 
         if (snapshot.summary) {

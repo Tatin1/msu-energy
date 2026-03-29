@@ -24,7 +24,6 @@ class IoTIngestController extends Controller
     public function storeReading(StoreReadingRequest $request): Response
     {
         $validated = $request->validated();
-        \Log::info('Received reading payload', $validated);
 
         $meter = Meter::where('meter_code', $validated['meter_code'])->firstOrFail();
 

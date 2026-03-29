@@ -46,6 +46,12 @@ class BillingSnapshot
                 ->sum('readings.kwhiii');
         };
 
+        $sumCostInRange = function (Carbon $start, Carbon $end) use ($baseReadings): float {
+            return (float) (clone $baseReadings)
+                ->whereBetween('readings.time', [$start, $end])
+                ->sum('readings.cost');
+        };
+
         $avgPfInRange = function (Carbon $start, Carbon $end) use ($baseReadings): ?float {
             return (clone $baseReadings)
                 ->whereBetween('readings.time', [$start, $end])
@@ -55,14 +61,17 @@ class BillingSnapshot
 
         $summaryKwh = $sumInRange($rangeStart, $rangeEnd);
         $summaryPrevKwh = $sumInRange($previousStart, $previousEnd);
+        $summaryCost = $sumCostInRange($rangeStart, $rangeEnd);
+        $summaryPrevCost = $sumCostInRange($previousStart, $previousEnd);
         $summaryAvgPf = $avgPfInRange($rangeStart, $rangeEnd) ?? 0;
 
         $summary = [
             'this_month_kwh' => round($summaryKwh, 3),
             'last_month_kwh' => round($summaryPrevKwh, 3),
+            'last_month_cost' => round($summaryPrevCost, 2),
             'avg_pf' => round((float) $summaryAvgPf, 4),
         ];
-        $summary['total_cost'] = round($summary['this_month_kwh'] * $tariffRate, 2);
+        $summary['total_cost'] = round($summaryCost, 2);
 
         $buildingQuery = Building::query()
             ->select('id', 'code', 'name')
@@ -75,27 +84,28 @@ class BillingSnapshot
         $perBuildingCurrent = (clone $baseReadings)
             ->whereBetween('readings.time', [$rangeStart, $rangeEnd])
             ->groupBy('meters.building_id')
-            ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwhiii), 0) as total_kwh, AVG(readings.pfiii) as avg_pf')
+            ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwhiii), 0) as total_kwh, COALESCE(SUM(readings.cost), 0) as total_cost, AVG(readings.pfiii) as avg_pf')
             ->get()
             ->keyBy('building_id');
 
         $perBuildingPrevious = (clone $baseReadings)
             ->whereBetween('readings.time', [$previousStart, $previousEnd])
             ->groupBy('meters.building_id')
-            ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwhiii), 0) as total_kwh')
+            ->selectRaw('meters.building_id as building_id, COALESCE(SUM(readings.kwhiii), 0) as total_kwh, COALESCE(SUM(readings.cost), 0) as total_cost')
             ->get()
             ->keyBy('building_id');
 
         $buildingSeries = $buildingQuery
             ->get()
-            ->map(function (Building $building) use ($tariffRate, $perBuildingCurrent, $perBuildingPrevious) {
+            ->map(function (Building $building) use ($perBuildingCurrent, $perBuildingPrevious) {
                 $current = $perBuildingCurrent->get($building->id);
                 $previous = $perBuildingPrevious->get($building->id);
 
                 $thisRange = $current ? (float) $current->total_kwh : 0;
                 $lastRange = $previous ? (float) $previous->total_kwh : 0;
                 $avgPf = $current && $current->avg_pf !== null ? (float) $current->avg_pf : null;
-                $cost = $thisRange * $tariffRate;
+                $cost = $current ? (float) $current->total_cost : 0;
+                $lastCost = $previous ? (float) $previous->total_cost : 0;
 
                 return [
                     'id' => $building->id,
@@ -104,6 +114,7 @@ class BillingSnapshot
                     'this_month_kwh' => round($thisRange, 3),
                     'last_month_kwh' => round($lastRange, 3),
                     'cost' => round($cost, 2),
+                    'last_month_cost' => round($lastCost, 2),
                     'avg_pf' => $avgPf !== null ? round($avgPf, 4) : null,
                 ];
             })
