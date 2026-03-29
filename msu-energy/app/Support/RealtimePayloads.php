@@ -20,9 +20,16 @@ class RealtimePayloads
 
         $currentTotals = self::buildingEnergyTotals($currentStart, $now);
         $previousTotals = self::buildingEnergyTotals($previousStart, $previousEnd)->keyBy('label');
+        $currentTotalsByLabel = $currentTotals->keyBy('label');
 
-        $labels = $currentTotals->pluck('label')->toArray();
-        $values = $currentTotals->pluck('total_kwh')->map(fn ($value) => round($value, 3))->toArray();
+        $labels = array_values(array_unique(array_merge(
+            $currentTotalsByLabel->keys()->toArray(),
+            $previousTotals->keys()->toArray()
+        )));
+        $values = array_map(
+            fn ($label) => round((float) ($currentTotalsByLabel->get($label)->total_kwh ?? 0), 3),
+            $labels
+        );
         $prevValues = array_map(
             fn ($label) => round($previousTotals->get($label)->total_kwh ?? 0, 3),
             $labels

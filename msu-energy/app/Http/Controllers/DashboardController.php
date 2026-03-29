@@ -35,23 +35,32 @@ class DashboardController extends Controller
         $currentTotals = $this->buildingEnergyTotals($currentStart, $now);
         $previousTotals = $this->buildingEnergyTotals($previousStart, $previousEnd)
             ->keyBy('label');
+        $currentTotalsByLabel = $currentTotals->keyBy('label');
 
-        $labels = $currentTotals->pluck('label')->toArray();
-        $values = $currentTotals->pluck('total_kwh')->map(fn ($value) => round($value, 3))->toArray();
+        $labels = array_values(array_unique(array_merge(
+            $currentTotalsByLabel->keys()->toArray(),
+            $previousTotals->keys()->toArray()
+        )));
+        $values = array_map(
+            fn ($label) => round((float) ($currentTotalsByLabel->get($label)->total_kwh ?? 0), 3),
+            $labels
+        );
         $prevValues = array_map(
             fn ($label) => round($previousTotals->get($label)->total_kwh ?? 0, 3),
             $labels
         );
 
-        $fifteenMinutesAgo = $now->copy()->subMinutes(15);
-        $totalPower = (float) Reading::query()
+        $latestReading = Reading::query()
             ->whereNotNull('kwiii')
-            ->whereBetween('time', [$fifteenMinutesAgo, $now])
-            ->sum('kwiii');
+            ->orderBy('time', 'desc')
+            ->first(['kwiii']);
+        $totalPower = (float) ($latestReading->kwiii ?? 0);
 
-        $avgPF = (float) Reading::query()
+        $latestPfReading = Reading::query()
             ->whereNotNull('pfiii')
-            ->avg('pfiii');
+            ->orderBy('time', 'desc')
+            ->first(['pfiii']);
+        $avgPF = (float) ($latestPfReading->pfiii ?? 0);
 
         $lastMonthKwh = (float) Reading::query()
             ->whereBetween('time', [$previousStart, $previousEnd])
@@ -87,23 +96,32 @@ class DashboardController extends Controller
         $currentTotals = $this->buildingEnergyTotals($currentStart, $now);
         $previousTotals = $this->buildingEnergyTotals($previousStart, $previousEnd)
             ->keyBy('label');
+        $currentTotalsByLabel = $currentTotals->keyBy('label');
 
-        $labels = $currentTotals->pluck('label')->toArray();
-        $values = $currentTotals->pluck('total_kwh')->map(fn ($value) => round($value, 3))->toArray();
+        $labels = array_values(array_unique(array_merge(
+            $currentTotalsByLabel->keys()->toArray(),
+            $previousTotals->keys()->toArray()
+        )));
+        $values = array_map(
+            fn ($label) => round((float) ($currentTotalsByLabel->get($label)->total_kwh ?? 0), 3),
+            $labels
+        );
         $prevValues = array_map(
             fn ($label) => round($previousTotals->get($label)->total_kwh ?? 0, 3),
             $labels
         );
 
-        $fifteenMinutesAgo = $now->copy()->subMinutes(15);
-        $totalPower = (float) Reading::query()
+        $latestReading = Reading::query()
             ->whereNotNull('kwiii')
-            ->whereBetween('time', [$fifteenMinutesAgo, $now])
-            ->sum('kwiii');
+            ->orderBy('time', 'desc')
+            ->first(['kwiii']);
+        $totalPower = (float) ($latestReading->kwiii ?? 0);
 
-        $avgPF = (float) Reading::query()
+        $latestPfReading = Reading::query()
             ->whereNotNull('pfiii')
-            ->avg('pfiii');
+            ->orderBy('time', 'desc')
+            ->first(['pfiii']);
+        $avgPF = (float) ($latestPfReading->pfiii ?? 0);
 
         $lastMonthKwh = (float) Reading::query()
             ->whereBetween('time', [$previousStart, $previousEnd])
