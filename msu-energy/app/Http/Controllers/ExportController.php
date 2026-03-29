@@ -6,34 +6,16 @@ use App\Models\Reading;
 use App\Models\SystemLog;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-// use Illuminate\Support\Facades\DB;
 
 class ExportController extends Controller
 {
     /**
-     * Export Building Data (IoT-ready + dummy fallback)
+     * Export Building Data
      */
     public function exportBuilding(Request $request)
     {
         $filename = "building_data_" . now()->format('Y_m_d_His') . ".csv";
         $headers = ['Content-Type' => 'text/csv'];
-
-        /*
-        try {
-            $buildingData = DB::table('building_logs')
-                ->select('id', 'date', 'time', 'time_ed', 'f', 'v1', 'v2', 'v3', 'a1', 'a2', 'a3', 'pf1', 'pf2', 'pf3', 'kwh')
-                ->whereDate('date', Carbon::today())
-                ->get();
-        } catch (\Exception $e) {
-            $buildingData = collect([]);
-        }
-
-        if ($buildingData->isEmpty()) {
-            $buildingData = collect([
-                (object)[]
-            ]);
-        }
-        */
 
         $validated = $request->validate([
             'building' => 'nullable|string|max:120',
@@ -70,35 +52,7 @@ class ExportController extends Controller
         $buildingData = $query->limit($maxRows)->get();
 
         if ($buildingData->isEmpty()) {
-            $buildingData = collect([
-                (object) [
-                    'id' => 1,
-                    'building' => 'SAMPLE',
-                    'meter' => 'SAMPLE-MTR-1',
-                    'date' => '2025-10-25',
-                    'time' => '08:15',
-                    'time_ed' => '08:30',
-                    'f' => null,
-                    'v1' => 230,
-                    'v2' => 228,
-                    'v3' => 231,
-                    'a1' => 12.4,
-                    'a2' => 11.8,
-                    'a3' => 13.0,
-                    'kw1' => 18.1,
-                    'kw2' => 17.5,
-                    'kw3' => 17.8,
-                    'pf1' => 0.92,
-                    'pf2' => 0.94,
-                    'pf3' => 0.91,
-                    'kwiii' => 53.4,
-                    'kvaiii' => 58.0,
-                    'kvariii' => 22.7,
-                    'pfiii' => 0.92,
-                    'kwh' => 128.3,
-                    'cost' => 1539.6,
-                ],
-            ]);
+            $buildingData = collect();
         }
 
         $rows = $buildingData->map(function ($row) {
@@ -161,7 +115,7 @@ class ExportController extends Controller
                 'kvaiii' => $payload['kvaiii'] ?? null,
                 'kvariii' => $payload['kvariii'] ?? null,
                 'pfiii' => $payload['pfiii'] ?? null,
-                'kwh' => $payload['kwh'] ?? null,
+                'kwhiii' => $payload['kwhiii'] ?? ($payload['kwh'] ?? null),
                 'cost' => $payload['cost'] ?? null,
             ];
         });
@@ -169,9 +123,9 @@ class ExportController extends Controller
         // === Stream CSV ===
         $callback = function() use ($rows) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['ID','METER','DATE','TIME','TIMEed','F','V1','V2','V3','A1','A2','A3','KW1','KW2','KW3','PF1','PF2','PF3','KWIII','KVAIII','KVARIII','PFIII','KWHIII','COST']);
+            $this->writeCsvRow($file, ['ID','METER','DATE','TIME','TIMEed','F','V1','V2','V3','A1','A2','A3','KW1','KW2','KW3','PF1','PF2','PF3','KWIII','KVAIII','KVARIII','PFIII','KWHIII','COST']);
             foreach ($rows as $row) {
-                fputcsv($file, [
+                $this->writeCsvRow($file, [
                     $row['id'],
                     $row['meter'],
                     $row['date'],
@@ -194,7 +148,7 @@ class ExportController extends Controller
                     $row['kvaiii'],
                     $row['kvariii'],
                     $row['pfiii'],
-                    $row['kwh'],
+                    $row['kwhiii'] ?? null,
                     $row['cost'],
                 ]);
             }
@@ -208,29 +162,12 @@ class ExportController extends Controller
 
 
     /**
-     * Export System Data (IoT-ready + dummy fallback)
+     * Export System Data
      */
     public function exportSystem(Request $request)
     {
         $filename = "system_data_" . now()->format('Y_m_d_His') . ".csv";
         $headers = ['Content-Type' => 'text/csv'];
-
-        /*
-        try {
-            $systemData = DB::table('system_logs')
-                ->select('id', 'date', 'time', 'time_ed', 'total_kw', 'total_kvar', 'total_kva', 'total_pf')
-                ->whereDate('date', Carbon::today())
-                ->get();
-        } catch (\Exception $e) {
-            $systemData = collect([]);
-        }
-
-        if ($systemData->isEmpty()) {
-            $systemData = collect([
-                (object) []
-            ]);
-        }
-        */
 
         $validated = $request->validate([
             'building' => 'nullable|string|max:120',
@@ -264,20 +201,7 @@ class ExportController extends Controller
         $systemData = $query->limit($maxRows)->get();
 
         if ($systemData->isEmpty()) {
-            $systemData = collect([
-                (object) [
-                    'id' => 1,
-                    'building' => 'SYSTEM',
-                    'meter' => 'SYSTEM',
-                    'date' => '2025-10-25',
-                    'time' => '08:15',
-                    'time_ed' => '08:30',
-                    'total_kw' => 420,
-                    'total_kvar' => 180,
-                    'total_kva' => 460,
-                    'total_pf' => 0.92,
-                ],
-            ]);
+            $systemData = collect();
         }
 
         $rows = $systemData->map(function ($row) {
@@ -286,7 +210,7 @@ class ExportController extends Controller
             return [
                 'id' => $payload['id'] ?? null,
                 'building' => $payload['building'] ?? null,
-                'meter' => $payload['building'] ?? null,
+                'meter' => $payload['meter'] ?? ($payload['building'] ?? null),
                 'date' => $payload['date'] ?? null,
                 'time' => $payload['time'] ?? null,
                 'time_ed' => $payload['time_ed'] ?? null,
@@ -300,9 +224,9 @@ class ExportController extends Controller
         // === Stream CSV ===
         $callback = function() use ($rows) {
             $file = fopen('php://output', 'w');
-            fputcsv($file, ['ID','METER','DATE','TIME','TIMEed','TOTAL_KW','TOTAL_KVAR','TOTAL_KVA','TOTAL_PF']);
+            $this->writeCsvRow($file, ['ID','METER','DATE','TIME','TIMEed','TOTAL_KW','TOTAL_KVAR','TOTAL_KVA','TOTAL_PF']);
             foreach ($rows as $row) {
-                fputcsv($file, [
+                $this->writeCsvRow($file, [
                     $row['id'],
                     $row['meter'],
                     $row['date'],
@@ -320,5 +244,24 @@ class ExportController extends Controller
         return response()->stream($callback, 200, array_merge($headers, [
             "Content-Disposition" => "attachment; filename=$filename"
         ]));
+    }
+
+    private function writeCsvRow($file, array $row): void
+    {
+        fputcsv($file, array_map(fn ($value) => $this->sanitizeCsvCell($value), $row));
+    }
+
+    private function sanitizeCsvCell($value)
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $stringValue = (string) $value;
+        if ($stringValue !== '' && preg_match('/^[=+\-@]/', $stringValue) === 1) {
+            return "'".$stringValue;
+        }
+
+        return $value;
     }
 }

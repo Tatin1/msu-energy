@@ -174,13 +174,6 @@
 
     {{-- Export & Filter Scripts --}}
     <script>
-        // Export buttons
-        document.getElementById('exportBuildingBtn').addEventListener('click', () => {
-            window.location.href = "{{ route('export.building') }}";
-        });
-        document.getElementById('exportSystemBtn').addEventListener('click', () => {
-            window.location.href = "{{ route('export.system') }}";
-        });
 
         // Building Data Filter
         const buildingSelect = document.getElementById('building-select');
@@ -236,10 +229,10 @@
     </script>
     <script>
         const historyConfig = {
-            buildingEndpoint: "{{ url('/api/history/building-logs') }}",
-            systemEndpoint: "{{ url('/api/history/system-logs') }}",
-            exportBuildingRoute: "{{ route('export.building') }}",
-            exportSystemRoute: "{{ route('export.system') }}",
+            buildingEndpoint: "/api/history/building-logs",
+            systemEndpoint: "/api/history/system-logs",
+            exportBuildingRoute: "{{ route('export.building', [], false) }}",
+            exportSystemRoute: "{{ route('export.system', [], false) }}",
             buildingColumns: 24,
             systemColumns: 9,
             perPage: 50,

@@ -120,6 +120,8 @@ async function populateSelects(){
   const billSel = document.getElementById('billBuilding');
   const paramSel = document.getElementById('paramBuilding');
   const histSel = document.getElementById('histMeterBldg');
+  if(!billSel || !paramSel || !histSel) return;
+
   billSel.innerHTML = list.map(b=>`<option value="${b.code}">${b.name}</option>`).join('');
   paramSel.innerHTML = billSel.innerHTML;
   histSel.innerHTML = billSel.innerHTML;
